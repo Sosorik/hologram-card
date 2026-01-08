@@ -698,7 +698,7 @@ function bindCarouselEvents(modal, data, index, groupList) {
     let swipeDirection = null; // 'horizontal' or 'vertical'
     const stage = modal.querySelector('.detail-carousel-stage');
     const SWIPE_THRESHOLD = 80; // Minimum distance to trigger navigation
-    const DIRECTION_LOCK_THRESHOLD = 10; // Distance to determine swipe direction
+    const DIRECTION_LOCK_THRESHOLD = 30; // Increased from 10 to filter tilt jitters
 
     // Helper to get X/Y from either touch or mouse event
     const getPointerPosition = (e) => {
@@ -713,6 +713,9 @@ function bindCarouselEvents(modal, data, index, groupList) {
         const centerCard = track.querySelector('.pos-center');
         const leftCard = track.querySelector('.pos-left');
         const rightCard = track.querySelector('.pos-right');
+
+        // DISABLE TILT during swipe
+        if (centerCard) centerCard.style.transition = 'none';
 
         if (centerCard) {
             centerCard.style.transform = `translateX(${diffX * 0.5}px) scale(0.9)`;
@@ -738,6 +741,9 @@ function bindCarouselEvents(modal, data, index, groupList) {
             card.style.transform = '';
             card.style.opacity = '';
             card.style.filter = '';
+            card.style.transition = ''; // RESTORE TILT TRANSITION
+
+            // Re-enable tilt if needed (handled by CardInteraction mostly)
         });
     };
 
@@ -761,15 +767,21 @@ function bindCarouselEvents(modal, data, index, groupList) {
         const diffX = pos.x - pointerStartX;
         const diffY = pos.y - pointerStartY;
 
-        if (!swipeDirection && (Math.abs(diffX) > DIRECTION_LOCK_THRESHOLD || Math.abs(diffY) > DIRECTION_LOCK_THRESHOLD)) {
-            swipeDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+        // ONLY DETERMINE DIRECTION IF NOT LOCKED YET
+        if (!swipeDirection) {
+            if (Math.abs(diffX) > DIRECTION_LOCK_THRESHOLD || Math.abs(diffY) > DIRECTION_LOCK_THRESHOLD) {
+                swipeDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+            }
         }
 
+        // ONLY APPLY SWIPE IF LOCKED HORIZONTAL
         if (swipeDirection === 'horizontal') {
             e.preventDefault();
+            e.stopPropagation(); // Stop scrolling
             pointerCurrentX = pos.x;
             applySwipeFeedback(diffX);
         }
+        // IF VERTICAL or UNLOCKED, DO NOTHING (Let native scroll or tilt happen)
     };
 
     // Handle swipe end

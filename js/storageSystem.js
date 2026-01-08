@@ -74,7 +74,8 @@ class StorageSystem {
         const { data, error } = await this.client
             .from('cards')
             .select('*')
-            .order('updated_at', { ascending: false });
+            .order('updated_at', { ascending: false })
+            .limit(50);
 
         if (error) {
             console.error("Supabase Load Error:", error);
