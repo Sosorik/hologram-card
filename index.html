@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+    <meta name="description"
+        content="Premium Holographic Card Creator - Create stunning holographic trading cards with custom effects">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- CSP: Allow unsafe-eval for libraries (Expanded) -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * data: blob: 'unsafe-inline';">
+    <title>Premium Holographic Card Creator</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css?v=ZERO_TOLERANCE_V6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+</head>
+
+<body>
+    <!-- Deep Link Anti-Flash & View Mode -->
+    <script>
+        if (new URLSearchParams(window.location.search).has('cardId')) {
+            document.body.classList.add('deep-link-mode');
+        }
+    </script>
+    <style>
+        /* Hide everything by default in deep link mode */
+        body.deep-link-mode>* {
+            display: none !important;
+        }
+
+        /* Exceptions: Modal and Toast */
+        body.deep-link-mode #cardDetailModal {
+            display: flex !important;
+        }
+
+        body.deep-link-mode #toast-container {
+            display: block !important;
+        }
+
+        /* Also allow scripts */
+        body.deep-link-mode script,
+        body.deep-link-mode style {
+            display: none;
+            /* Logic runs, but visual display none is default for them anyway */
+        }
+
+        /* FORCE HIDE BUTTONS IN DEEP LINK MODE */
+        body.deep-link-mode #detailDeleteBtn,
+        body.deep-link-mode #detailEditBtn,
+        body.deep-link-mode #detailHtmlBtn,
+        body.deep-link-mode .detail-action-bar,
+        body.deep-link-mode .detail-actions,
+        body.deep-link-mode .nav-hit-area {
+            /* Also hide nav arrows if single card view? User said 'only interaction', swipe/arrows might be weird if single. But arrows are fine. Buttons are the issue. */
+            display: none !important;
+        }
+    </style>
+    <!-- Template Editor Toggle: Desktop Only (Moved to Body Root for Visibility) -->
+    <button id="editorToggleBtn" class="editor-toggle-btn"
+        style="position: fixed !important; top: 20px !important; right: 20px !important; z-index: 2147483647 !important; background: #222 !important; color: white !important; border: 1px solid #555 !important; padding: 10px 20px !important; border-radius: 30px !important; cursor: pointer !important;">Template
+        Editor</button>
+
+    <div id="app-container">
+
+        <!-- VIEW 1: CREATE CARD -->
+        <div id="createCardView" class="view-section">
+            <!-- Design Match: Header (Smaller & Lower) -->
+            <!-- Added ID for Sync -->
+
+            <h1 id="templateNameHeader"
+                style="text-align: center; color: white; font-family: 'Inter', sans-serif; font-weight: 700; margin-top: 0px; margin-bottom: 25px; font-size: 21px;">
+                Template Name</h1>
+
+
+            <!-- Navigation Arrows (Outside Stage for mobile edge positioning) -->
+            <button id="navPrev" class="nav-arrow left" aria-label="Previous Template">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="navNext" class="nav-arrow right" aria-label="Next Template">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+            <!-- Main Carousel Stage (Layer 1) -->
+            <div class="carousel-stage">
+
+
+                <!-- Active Card (Center) -->
+                <div class="scene">
+                    <div class="card">
+                        <div class="card__front">
+                            <img class="card__frame" src="" alt="Frame" onerror="this.style.display='none'">
+
+                            <!-- Art Container (Masks the image) -->
+                            <div class="card__art-container">
+                                <img class="card__art" src="" alt="Art" onerror="this.style.display='none'">
+                                <img class="card__art-overlay" src="" alt="Overlay" onerror="this.style.display='none'">
+                            </div>
+
+                            <div class="card__shine"></div>
+                            <div class="card__shine-layer2"></div>
+                            <div class="card__glare"></div>
+                            <div class="card__coating"></div>
+                            <div class="card__info">
+                                <div class="card__name"></div>
+                                <div class="card__grade"></div>
+                                <div class="card__edition">ID'S EDITION. 001</div>
+                            </div>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="card__back">
+                            <div class="card__back-blur"></div>
+                            <div class="card__back-shine"></div> <!-- Hologram Layer -->
+                            <div class="card__back-glare"></div> <!-- Glare Layer -->
+                            <div class="card__back-frame"></div>
+                            <div class="card__back-logo"></div>
+                            <!-- NEW BACK CONTENT ELEMENTS -->
+                            <div class="card__back-title"></div>
+                            <div class="card__back-body"></div>
+                            <div class="card__back-info"></div>
+                            <div id="physicsConfigStatus" class="debug-status" style="display: none;"></div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!-- Next Card (Right) -->
+                <div id="carouselNext" class="carousel-side next"></div>
+            </div>
+
+            <!-- Controls (Layer 2) -->
+            <div class="controls">
+                <!-- Controls -->
+
+                <!-- Enable Motion Button (Initially Visible on Mobile) -->
+                <button id="enableMotionBtn" class="action-btn" onclick="requestMotionPermission()"
+                    style="display: none; width: 100%; margin-bottom: 20px; background: linear-gradient(135deg, #e55d87 0%, #5fc3e4 100%); border:none; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    📱 ENABLE MOTION CONTROL
+                </button>
+
+                <!-- 2. Grade Icons -->
+                <div id="gradeSelector" class="grade-selector">
+                    <!-- Generated by JS -->
+                </div>
+
+                <div class="button-row" style="display:flex; gap:10px; margin-bottom:7px;">
+                    <button id="toggleEditModeBtn" class="action-btn" style="flex:1;">Adjust Image</button>
+                    <label class="file-upload-btn" style="flex:1; margin:0;">
+                        Upload Image
+                        <input type="file" id="artUpload" accept="image/*">
+                    </label>
+                </div>
+
+                <!-- Back Mode Toggle (User Selectable) - Only visible when card is flipped -->
+                <div id="backModeToggle" class="back-mode-toggle"
+                    style="display:none; justify-content:center; gap:30px; padding:5px 0; margin-bottom:0;">
+                    <label class="mode-radio" data-mode="label"
+                        style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <span class="radio-circle active"></span>
+                        <span class="mode-label">Label mode</span>
+                    </label>
+                    <label class="mode-radio" data-mode="text"
+                        style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <span class="radio-circle"></span>
+                        <span class="mode-label">Text mode</span>
+                    </label>
+                </div>
+
+                <div class="text-inputs" style="gap:14px;">
+                    <!-- FRONT INPUTS -->
+                    <div id="frontInputs">
+                        <div class="input-group">
+                            <span class="input-label">Name</span>
+                            <input type="text" id="nameInput" placeholder="이름을 정해주세요" value="" maxlength="17">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-label">Group</span>
+                            <input type="text" id="editionInput" placeholder="카드의 그룹을 정해주세요" value="" maxlength="17">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-label">Rank</span>
+                            <input type="text" id="gradeInput" placeholder="랭크를 정해요" value="" maxlength="10">
+                        </div>
+                    </div>
+
+                    <!-- BACK INPUTS (Initially Hidden) -->
+                    <!-- BACK INPUTS (Initially Hidden) -->
+                    <div id="backInputs" style="display:none;">
+
+
+
+                        <!-- MODE 1: LABEL -->
+                        <div id="labelModeFields">
+                            <div class="input-group">
+                                <span class="input-label">Label</span>
+                                <input type="text" id="labelInput" placeholder="로고를 만들어요" value="" maxlength="9">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-label">Font</span>
+                                <select id="fontSelect">
+                                    <option value="Times New Roman, serif">Serif</option>
+                                    <option value="Arial, sans-serif">Sans</option>
+                                    <option value="Courier New, monospace">Mono</option>
+                                    <option value="cursive">Cursive</option>
+                                    <option value="fantasy">Fantasy</option>
+                                </select>
+                            </div>
+                            <div class="input-group" style="border-bottom: none; justify-content: flex-end;">
+                                <button id="refreshLogoBtn" class="refresh-btn" style="width: 30%;">Re-drop</button>
+                            </div>
+                        </div>
+
+                        <!-- MODE 2: TEXT INFO -->
+                        <div id="textModeFields" style="display: none;">
+                            <div class="input-group">
+                                <span class="input-label">Title</span>
+                                <input type="text" id="backTitleInput" placeholder="뒷면 제목" value="" maxlength="20">
+                            </div>
+                            <div class="input-group" style="border-bottom: none;">
+                                <span class="input-label">Body</span>
+                                <textarea id="backBodyInput" placeholder="본문 내용 입력" rows="3"
+                                    style="width:100%; background:transparent; border:none; color:#4CAF50; padding:5px; font-family:inherit; text-align:left; resize:none; font-size:13px; margin-left:6px;"></textarea>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-label">Info</span>
+                                <input type="text" id="backInfoInput" placeholder="하단 정보" value="" maxlength="30">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- Main Save Button -->
+                <button id="saveCardBtn" class="action-btn"
+                    style="width: auto; padding: 10px 40px; margin-top: 20px; background: #4CAF50; border-color: #45a049; font-family: 'Teko', sans-serif; font-size: 20px;">
+                    Save Card
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation (Mobile) -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="showMainView()">CREATE CARD</button>
+            <button class="nav-btn" onclick="toggleMyCards()">MY CARD</button>
+        </nav>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="js/supabaseConfig.js"></script>
+
+        <script src="js/templateConfig.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/physicsLogo.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/toastSystem.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/modalSystem.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/templateEditor.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/storageSystem.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/cardInteraction.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/gallerySystem.js?v=ZERO_TOLERANCE_V15"></script>
+        <script src="js/templateSystem.js?v=ZERO_TOLERANCE_V15"></script>
+        <script>
+            // Init Template System
+            document.addEventListener('DOMContentLoaded', () => {
+                if (window.initTemplateSystem) initTemplateSystem();
+                if (window.Toast) {
+                    // Force cache bust feedback
+                    setTimeout(() => Toast.show("System v3.0 Final: Operational", "success"), 500);
+                }
+            });
+
+            const card = document.querySelector('.scene .card');
+            const scene = document.querySelector('.scene');
+            const shine = document.querySelector('.scene .card__shine');
+            const glare = document.querySelector('.scene .card__glare');
+            const artUpload = document.getElementById('artUpload');
+            const cardArt = document.querySelector('.scene .card__art');
+            const cardBackBlur = document.querySelector('.scene .card__back-blur'); // Select back blur layer
+
+            // Text Inputs - FRONT
+            const nameInput = document.getElementById('nameInput');
+            const editionInput = document.getElementById('editionInput');
+            const gradeInput = document.getElementById('gradeInput');
+
+            // Text Inputs - BACK
+            const labelInput = document.getElementById('labelInput');
+            const backTitleInput = document.getElementById('backTitleInput');
+            const backBodyInput = document.getElementById('backBodyInput');
+            const backInfoInput = document.getElementById('backInfoInput');
+
+            // Card Elements - FRONT
+            const cardName = document.querySelector('.scene .card__name');
+            const cardEdition = document.querySelector('.scene .card__edition');
+            const cardGrade = document.querySelector('.scene .card__grade');
+
+            // Card Elements - BACK
+            const cardLabel = document.querySelector('.scene .card__back-logo'); // Note: This might be generated canvas/img? Or div?
+            // Actually label usually goes into logo container.
+            const cardBackTitle = document.querySelector('.scene .card__back-title');
+            const cardBackBody = document.querySelector('.scene .card__back-body');
+            const cardBackInfo = document.querySelector('.scene .card__back-info');
+
+            let isFlipped = false;
+
+            // Auto-fit text function - reduces font size if text overflows
+            function autoFitText(element, maxFontSize = 26, minFontSize = 10) {
+                if (!element) return;
+
+                // User Override (from Editor)
+                if (element.dataset.userFontSize) {
+                    const userSize = parseInt(element.dataset.userFontSize);
+                    if (!isNaN(userSize) && userSize > 0) {
+                        maxFontSize = userSize;
+                    }
+                }
+
+                // Store original properties
+                const originalWhiteSpace = element.style.whiteSpace;
+                const originalOverflow = element.style.overflow;
+
+                // Setup for measurement
+                element.style.whiteSpace = 'nowrap';
+                element.style.overflow = 'visible';
+
+                // Get container width (check max-width first, then parent)
+                let containerWidth = element.parentElement ? element.parentElement.offsetWidth - 20 : element.offsetWidth;
+
+                const style = window.getComputedStyle(element);
+                const maxWidth = parseFloat(style.maxWidth);
+
+                if (!isNaN(maxWidth) && maxWidth > 0) {
+                    // specific max-width set on element takes precedence if smaller than parent
+                    containerWidth = Math.min(containerWidth, maxWidth);
+                }
+
+                // Safety check: if container has no width (e.g. hidden or not rendered), abort
+                if (containerWidth <= 0) {
+                    console.warn("autoFitText aborted: containerWidth is 0 for", element);
+                    return;
+                }
+
+                console.log(`autoFitText for ${element.className}: containerWidth=${containerWidth}, scrollWidth=${element.scrollWidth}, text=${element.innerText}`);
+                // Start from max font size
+                let fontSize = maxFontSize;
+                element.style.fontSize = fontSize + 'px';
+
+                // Reduce font size until text fits
+                while (element.scrollWidth > containerWidth && fontSize > minFontSize) {
+                    fontSize -= 1;
+                    element.style.fontSize = fontSize + 'px';
+                }
+
+                // Restore original properties
+                element.style.whiteSpace = originalWhiteSpace || '';
+                element.style.overflow = originalOverflow || '';
+            }
+
+            // Update Text with auto-fit
+            const defaults = {
+                name: "Name Here",
+                edition: "Group A",
+                grade: "",
+                label: "Label",
+                backTitle: "CARD TITLE",
+                backBody: "Enter your card description here...",
+                backInfo: "www.yoursite.com"
+            };
+
+            // Exposed for Template System
+            window.updateTextDefaults = (newDefaults) => {
+                if (newDefaults.name) {
+                    defaults.name = newDefaults.name;
+                    if (nameInput) nameInput.placeholder = newDefaults.name;
+                }
+                if (newDefaults.edition) {
+                    defaults.edition = newDefaults.edition;
+                    if (editionInput) editionInput.placeholder = newDefaults.edition;
+                }
+                if (newDefaults.grade) {
+                    defaults.grade = newDefaults.grade;
+                    if (gradeInput) gradeInput.placeholder = newDefaults.grade;
+                }
+                if (newDefaults.label) {
+                    defaults.label = newDefaults.label;
+                    if (labelInput) labelInput.placeholder = newDefaults.label;
+                }
+                // Update Back defaults if provided (optional)
+                syncText();
+            };
+
+            // Get base font sizes from layout or use defaults
+            const getBaseFontSize = (key) => {
+                const template = window.cardConfig?.templates?.[window.currentTemplateIndex || 0];
+
+                // 1. Check Grade Specific Layout First
+                if (window.currentGradeId && template?.grades?.[window.currentGradeId]?.layout?.[key]?.fontSize) {
+                    const fs = parseInt(template.grades[window.currentGradeId].layout[key].fontSize);
+                    console.log(`getBaseFontSize(${key}): Found Grade Layout (${window.currentGradeId}) -> ${fs}`);
+                    return fs || 26;
+                }
+
+                // 2. Fallback to Template Layout
+                if (template?.layout?.[key]?.fontSize) {
+                    const fs = parseInt(template.layout[key].fontSize);
+                    console.log(`getBaseFontSize(${key}): Found Template Layout -> ${fs}`);
+                    return fs || 26;
+                }
+                console.log(`getBaseFontSize(${key}): Using Default`);
+                return key === 'grade' ? 26 : (key === 'edition' ? 12 : 26);
+            };
+
+            const syncText = () => {
+                cardName.innerHTML = nameInput.value || defaults.name;
+                cardEdition.innerHTML = editionInput.value || defaults.edition;
+                cardGrade.innerHTML = gradeInput.value || defaults.grade;
+
+                // Back Side Sync
+                if (cardBackTitle) cardBackTitle.innerHTML = backTitleInput.value || defaults.backTitle;
+                if (cardBackBody) cardBackBody.innerHTML = backBodyInput.value || defaults.backBody;
+                if (cardBackInfo) cardBackInfo.innerHTML = backInfoInput.value || defaults.backInfo;
+
+                // Label is handled by PhysicsLogo mostly, but if we have simple text fallback:
+                // if (cardLabel && labelInput) cardLabel.innerHTML = labelInput.value || defaults.label;
+
+                // Apply auto-fit to all text elements
+                autoFitText(cardName, getBaseFontSize('name'), 12);
+                autoFitText(cardEdition, getBaseFontSize('edition'), 8);
+                // autoFitText(cardLabel, getBaseFontSize('label'), 8);
+            };
+
+            // Input Visibility Toggle
+            const updateInputVisibility = (flipped) => {
+                const frontInputs = document.getElementById('frontInputs');
+                const backInputs = document.getElementById('backInputs');
+                const backModeToggle = document.getElementById('backModeToggle');
+
+                if (flipped) {
+                    frontInputs.style.display = 'none';
+                    backInputs.style.display = 'block';
+                    if (backModeToggle) backModeToggle.style.display = 'flex';
+                } else {
+                    frontInputs.style.display = 'block';
+                    backInputs.style.display = 'none';
+                    if (backModeToggle) backModeToggle.style.display = 'none';
+                }
+            };
+
+            nameInput.addEventListener('input', (e) => {
+                cardName.innerHTML = e.target.value || defaults.name;
+                autoFitText(cardName, getBaseFontSize('name'), 12);
+            });
+            editionInput.addEventListener('input', (e) => {
+                cardEdition.innerHTML = e.target.value || defaults.edition;
+                autoFitText(cardEdition, getBaseFontSize('edition'), 8);
+            });
+            gradeInput.addEventListener('input', (e) => {
+                // Allow all characters (Removed strict regex)
+                let val = e.target.value;
+                // maxLength is now controlled by template editor setting
+                e.target.value = val;
+                cardGrade.innerHTML = val || defaults.grade;
+                autoFitText(cardGrade, getBaseFontSize('grade'), 10);
+            });
+
+            // Back Inputs Listeners
+            if (backTitleInput) backTitleInput.addEventListener('input', (e) => { cardBackTitle.innerHTML = e.target.value || defaults.backTitle; });
+            if (backBodyInput) backBodyInput.addEventListener('input', (e) => { cardBackBody.innerHTML = e.target.value || defaults.backBody; });
+            if (backInfoInput) backInfoInput.addEventListener('input', (e) => { cardBackInfo.innerHTML = e.target.value || defaults.backInfo; });
+
+            // Initial Sync
+            syncText();
+
+            // Label Input Listener
+            if (labelInput) {
+                labelInput.addEventListener('input', (e) => {
+                    // if (cardLabel) {
+                    //     cardLabel.innerHTML = e.target.value || defaults.label;
+                    //     autoFitText(cardLabel, getBaseFontSize('label'), 8);
+                    // }
+                    const container = document.querySelector('.card__back-logo');
+                    const font = document.getElementById('fontSelect').value;
+                    PhysicsLogo.generate(e.target.value || "LABEL", container, font);
+                });
+            }
+
+            // Font Select Change Listener (Regenerate Logo on Font Change)
+            const fontSelect = document.getElementById('fontSelect');
+            if (fontSelect) {
+                // 1. INITIALIZE ON LOAD: Force the default value (Serif) into the system
+                const initVal = fontSelect.value;
+                document.documentElement.style.setProperty('--font-family', initVal);
+
+                fontSelect.addEventListener('change', (e) => {
+                    const val = e.target.value;
+                    const container = document.querySelector('.card__back-logo');
+                    const text = labelInput.value || "LABEL";
+
+                    // CRITICAL: Update CSS Variable so it can be SAVED
+                    document.documentElement.style.setProperty('--font-family', val);
+
+                    // Always allow generation on font change (user intent is explicit)
+                    PhysicsLogo.generate(text, container, val);
+                });
+            }
+
+            // Handle Image Upload (Server Persistence)
+            artUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // Use persistent upload instead of Data URL
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+                        if (!isLocal) {
+                            // Vercel / Static Mode: Direct Data URI
+                            console.log("Static Mode: Using Data URI for image");
+                            const dataUrl = evt.target.result;
+                            cardArt.src = dataUrl;
+                            cardArt.style.display = ''; // Reset inline display:none from onerror
+                            cardArt.classList.add('visible');
+                            const artOverlay = document.querySelector('.card__art-overlay');
+                            if (artOverlay) artOverlay.src = dataUrl;
+
+                            if (window.Toast) Toast.show("Image Set (Temporary)", "info");
+                            return;
+                        }
+
+                        fetch('/upload-asset', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                filename: file.name,
+                                data: evt.target.result, // Base64
+                                folder: 'uploads' // Dedicated folder
+                            })
+                        })
+                            .then(r => r.json())
+                            .then(d => {
+                                if (d.success) {
+                                    // Use the server URL
+                                    const serverUrl = d.url;
+                                    cardArt.src = serverUrl;
+                                    cardArt.style.display = ''; // Reset inline display:none from onerror
+                                    cardArt.classList.add('visible');
+
+                                    // Sync Overlay
+                                    const artOverlay = document.querySelector('.card__art-overlay');
+                                    if (artOverlay) {
+                                        artOverlay.src = serverUrl;
+                                    }
+
+                                    if (window.Toast) Toast.show("Image Uploaded!", "success");
+                                } else {
+                                    if (window.Toast) Toast.show("Upload failed: " + d.error, "error");
+                                    else alert("Upload failed: " + d.error);
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                if (window.Toast) Toast.show("Upload error", "error");
+                                else alert("Upload error");
+                            });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            let isImageEditMode = false;
+            let imgState = { x: 0, y: 0, scale: 1 };
+            let lastDist = 0; // For pinch zoom
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+
+            // Helper: Get card's current CSS scale to compensate drag deltas
+            const getCardScale = () => {
+                const scene = document.querySelector('.scene');
+                if (!scene) return 1;
+                const matrix = window.getComputedStyle(scene).transform;
+                if (matrix === 'none') return 1;
+                // Parse matrix(a, b, c, d, tx, ty) - scale is 'a'
+                const values = matrix.match(/matrix\((.+)\)/);
+                if (values && values[1]) {
+                    const parts = values[1].split(',').map(parseFloat);
+                    return parts[0] || 1;
+                }
+                return 1;
+            };
+
+
+            const updateImageTransform = () => {
+                const art = document.querySelector('.scene .card__art');
+                const overlay = document.querySelector('.scene .card__art-overlay');
+                // Base center (-50%, -50%) + Offset
+                const transform = `translate(calc(-50% + ${imgState.x}px), calc(-50% + ${imgState.y}px)) scale(${imgState.scale})`;
+
+                if (art) art.style.transform = transform;
+                if (overlay) overlay.style.transform = transform;
+            };
+            // Expose for Gallery Restore
+            window.updateImageTransform = (state) => {
+                if (state) {
+                    imgState = state;
+                    updateImageTransform();
+                }
+            };
+            window.getImageTransform = () => ({ ...imgState });
+
+
+            // Toggle Edit Mode
+            const editBtn = document.getElementById('toggleEditModeBtn');
+            const artContainer = document.querySelector('.card__art-container');
+
+            editBtn.addEventListener('click', () => {
+                // CRITICAL: Reset drag state to prevent position jump when clicking Done
+                isDragging = false;
+
+                isImageEditMode = !isImageEditMode;
+                window.isImageEditMode = isImageEditMode; // Expose to CardInteraction module
+
+                if (isImageEditMode) {
+                    // Done State: Key Green, No Icon
+                    editBtn.textContent = "Done";
+                    editBtn.style.background = "#20d189"; // User-defined Key Green
+                    editBtn.style.color = "#000"; // Black Text for contrast
+                    editBtn.style.fontWeight = "700";
+                    artContainer.classList.add('interactive');
+
+                    // Reset tilt to flat
+                    resetTilt();
+
+                } else {
+                    // Default State: Clean, No Icon
+                    editBtn.textContent = "Adjust Image";
+                    editBtn.style.background = "";
+                    editBtn.style.color = ""; // Reset text color
+                    editBtn.style.fontWeight = "";
+                    artContainer.classList.remove('interactive');
+                }
+            });
+
+            // Mouse/Touch Logic on Container (For Image Pan/Zoom)
+            // MOUSE
+            artContainer.addEventListener('mousedown', (e) => {
+                if (!isImageEditMode) return;
+                isDragging = true;
+                const scale = getCardScale();
+                startX = e.clientX - imgState.x * scale;
+                startY = e.clientY - imgState.y * scale;
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging || !isImageEditMode) return;
+                const scale = getCardScale();
+                imgState.x = (e.clientX - startX) / scale;
+                imgState.y = (e.clientY - startY) / scale;
+                updateImageTransform();
+            });
+
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            // WHEEL ZOOM
+            artContainer.addEventListener('wheel', (e) => {
+                if (!isImageEditMode) return;
+                e.preventDefault();
+                const delta = e.deltaY * -0.001;
+                imgState.scale = Math.min(Math.max(0.1, imgState.scale + delta), 5); // 0.1x to 5x
+                updateImageTransform();
+            }, { passive: false });
+
+
+            // TOUCH (Pinch & Drag)
+            let lastTouchX = 0;
+            let lastTouchY = 0;
+
+            artContainer.addEventListener('touchstart', (e) => {
+                if (!isImageEditMode) return;
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+                } else if (e.touches.length === 2) {
+                    isDragging = false;
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    lastDist = Math.hypot(dx, dy);
+                }
+            }, { passive: false });
+
+            artContainer.addEventListener('touchmove', (e) => {
+                if (!isImageEditMode) return;
+                e.preventDefault();
+
+                if (e.touches.length === 1 && isDragging) {
+                    const touch = e.touches[0];
+                    const scale = getCardScale();
+                    const dx = (touch.clientX - lastTouchX) / scale;
+                    const dy = (touch.clientY - lastTouchY) / scale;
+                    imgState.x += dx;
+                    imgState.y += dy;
+                    lastTouchX = touch.clientX;
+                    lastTouchY = touch.clientY;
+                    updateImageTransform();
+                } else if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (lastDist > 0) {
+                        const diff = dist - lastDist;
+                        imgState.scale = Math.min(Math.max(0.1, imgState.scale + diff * 0.01), 5);
+                        updateImageTransform();
+                    }
+                    lastDist = dist;
+                }
+            }, { passive: false });
+
+            // CRITICAL FIX: Reset isDragging on touch end to prevent position jump
+            artContainer.addEventListener('touchend', () => {
+                isDragging = false;
+                lastDist = 0;
+            });
+            artContainer.addEventListener('touchcancel', () => {
+                isDragging = false;
+                lastDist = 0;
+            });
+
+
+            const resetTilt = () => {
+                // Force flat
+                if (card.classList.contains('is-flipping')) return;
+                card.style.transform = 'rotateY(0) rotateX(0)';
+                glare.style.opacity = '0';
+            };
+
+
+            // --- UNIFIED CARD INTERACTION ---
+            // 모든 틸트/플립 로직은 cardInteraction.js 모듈에서 처리
+            // 템플릿 카드 초기화
+            if (window.CardInteraction) {
+                CardInteraction.init(scene, {
+                    allowFlip: true,
+                    flipBackDisabled: false,
+                    cardSelector: '.card',
+                    onFlip: (flipped) => {
+                        isFlipped = flipped;
+                        updateInputVisibility(flipped);
+                    }
+                });
+            } else {
+                console.error('CardInteraction module not loaded!');
+            }
+
+            // --- Gravity Label (Matter.js) ---
+            const refreshLogoBtn = document.getElementById('refreshLogoBtn');
+            const logoContainer = document.querySelector('.card__back-logo');
+
+            // Initialize Physics Logo
+            setTimeout(() => {
+                const font = document.getElementById('fontSelect').value;
+                PhysicsLogo.generate(labelInput.value || "LABEL", logoContainer, font);
+            }, 500);
+
+            refreshLogoBtn.addEventListener('click', () => {
+                const font = document.getElementById('fontSelect').value;
+                PhysicsLogo.generate(labelInput.value || "LABEL", logoContainer, font);
+            });
+
+            // Label Reset Button - regenerate physics logo
+            const labelResetBtn = document.getElementById('labelResetBtn');
+            if (labelResetBtn) {
+                labelResetBtn.addEventListener('click', () => {
+                    const font = document.getElementById('fontSelect').value;
+                    PhysicsLogo.generate(labelInput.value || "LABEL", logoContainer, font);
+                });
+            }
+
+
+
+            // --- Back Content Toggle Logic ---
+            window.switchBackMode = function (mode) {
+                const labelFields = document.getElementById('labelModeFields');
+                const textFields = document.getElementById('textModeFields');
+                const options = document.querySelectorAll('.toggle-option');
+
+                // Card Elements
+                const cardLabel = document.querySelector('.card__label');
+                const backLogo = document.querySelector('.card__back-logo'); // Physics Logo Container
+                const backTitle = document.querySelector('.card__back-title');
+                const backBody = document.querySelector('.card__back-body');
+                const backInfo = document.querySelector('.card__back-info');
+                const root = document.querySelector('.scene');
+
+                // Update Toggle UI
+                options.forEach(opt => {
+                    if (opt.dataset.mode === mode) {
+                        opt.classList.add('active');
+                        opt.style.background = '#20d189';
+                        opt.style.color = '#13141a';
+                        opt.style.fontWeight = '700';
+                    } else {
+                        opt.classList.remove('active');
+                        opt.style.background = 'transparent';
+                        opt.style.color = '#888';
+                        opt.style.fontWeight = '500';
+                    }
+                });
+
+                // Apply Mode-Specific Back Image
+                if (root && window.cardConfig && window.cardConfig.templates) {
+                    const tmpl = window.cardConfig.templates[window.currentTemplateIndex || 0];
+                    if (tmpl) {
+                        // Get assets from grade or template
+                        let assets = tmpl.assets || {};
+                        if (window.currentGradeId && tmpl.grades && tmpl.grades[window.currentGradeId]) {
+                            assets = tmpl.grades[window.currentGradeId].assets || assets;
+                        }
+
+                        // Determine which back image to use based on mode
+                        const assetKey = mode === 'label' ? 'backImageLabel' : 'backImageText';
+                        const backImageUrl = assets[assetKey] || assets.back || '';
+
+                        if (backImageUrl) {
+                            root.style.setProperty('--template-back', `url('${backImageUrl}')`);
+                        }
+                    }
+                }
+
+                // Update Visibility
+                if (mode === 'label') {
+                    if (labelFields) labelFields.style.display = 'block';
+                    if (textFields) textFields.style.display = 'none';
+
+                    // Show Card Label & Logo, Hide Text
+                    if (cardLabel) cardLabel.style.display = 'block';
+                    if (backLogo) backLogo.style.display = 'block';
+                    if (backTitle) backTitle.style.display = 'none';
+                    if (backBody) backBody.style.display = 'none';
+                    if (backInfo) backInfo.style.display = 'none';
+                } else {
+                    if (labelFields) labelFields.style.display = 'none';
+                    if (textFields) textFields.style.display = 'block';
+
+                    // Hide Card Label & Logo, Show Text
+                    if (cardLabel) cardLabel.style.display = 'none';
+                    if (backLogo) backLogo.style.display = 'none';
+                    if (backTitle) backTitle.style.display = 'block';
+                    if (backBody) backBody.style.display = 'block';
+                    if (backInfo) backInfo.style.display = 'block';
+                }
+            };
+
+            // Init Default Mode (Label) on Load
+            // (Use setTimeout to ensure DOM is ready if directly in script)
+            setTimeout(() => {
+                if (window.switchBackMode) window.switchBackMode('label');
+            }, 100);
+
+            // Back Mode Toggle Click Handler
+            const modeToggle = document.getElementById('backModeToggle');
+            if (modeToggle) {
+                const modeRadios = modeToggle.querySelectorAll('.mode-radio');
+                modeRadios.forEach(radio => {
+                    radio.addEventListener('click', () => {
+                        const mode = radio.dataset.mode;
+
+                        // Update radio UI
+                        modeRadios.forEach(r => {
+                            r.querySelector('.radio-circle').classList.remove('active');
+                        });
+                        radio.querySelector('.radio-circle').classList.add('active');
+
+                        // Switch mode
+                        if (window.switchBackMode) window.switchBackMode(mode);
+                    });
+                });
+            }
+
+        </script>
+
+        <!-- Mobile Navigation Logic -->
+        <script>
+            function showMainView() {
+                // 1. UI State
+                document.querySelector('#createCardView').classList.remove('hidden');
+                document.querySelector('#myCardsGallery').classList.add('hidden');
+
+                // 2. Nav State
+                updateNavState('create');
+            }
+
+            function toggleMyCards() {
+                // 1. UI State
+                document.querySelector('#createCardView').classList.add('hidden');
+                const gallery = document.querySelector('#myCardsGallery');
+                gallery.classList.remove('hidden');
+
+                // 2. Load Gallery Data
+                if (window.loadGallery) window.loadGallery();
+
+                // 3. Nav State
+                updateNavState('mycard');
+            }
+
+            function updateNavState(activeTab) {
+                const tabs = document.querySelectorAll('.bottom-nav .nav-btn');
+                tabs.forEach(btn => btn.classList.remove('active'));
+
+                if (activeTab === 'create') {
+                    tabs[0].classList.add('active');
+                } else {
+                    tabs[1].classList.add('active');
+                }
+            }
+        </script>
+
+        <!-- Editor UI -->
+        <!-- Duplicate Button Removed -->
+        <button id="myCardsToggleBtn" class="my-cards-toggle-btn">My Cards</button>
+
+        <div id="editorPanel" class="editor-panel hidden">
+            <div class="editor-content">
+                <div id="editorControlsArea"></div>
+            </div>
+            <div class="editor-footer">
+                <button id="exportConfigBtn" class="action-btn">Export Config JSON</button>
+            </div>
+        </div>
+
+        <!-- VIEW 2: MY CARDS GALLERY (Hidden by default) -->
+        <!-- VIEW 2: MY CARDS GALLERY (Hidden by default) -->
+        <div id="myCardsGallery" class="view-section hidden">
+            <!-- Wrapper for scrolling -->
+            <div id="galleryContent" class="gallery-content"
+                style="width: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 0px;">
+
+                <!-- 1. Header Layer (Scrolls with content) -->
+                <!-- Height: 60px -->
+                <h2 class="gallery-main-title">Collections</h2>
+
+                <!-- 2. Card Grid Container (Targeted by JS) -->
+                <div id="galleryGrid" class="gallery-grid">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- SVG Filters -->
+    <svg style="display: none;">
+        <defs>
+            <!-- Improved Pen Filter (Edge Detection) -->
+            <filter id="filter-pen">
+                <feColorMatrix type="saturate" values="0" />
+                <feConvolveMatrix order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1" />
+                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 255 -100" />
+                <feComponentTransfer>
+                    <feFuncR type="table" tableValues="1 0" />
+                    <feFuncG type="table" tableValues="1 0" />
+                    <feFuncB type="table" tableValues="1 0" />
+                </feComponentTransfer>
+            </filter>
+        </defs>
+    </svg>
+    <!-- Duplicate script block removed - scripts already loaded at lines 141-147 -->
+    <!-- Arrow alignment now handled by CSS (style.css) -->
+</body>
+
+</html>

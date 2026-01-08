@@ -1,0 +1,8 @@
+# Defaults
+node_modules
+.git
+
+# Large Backups
+*.tar.gz
+*.zip
+backup*

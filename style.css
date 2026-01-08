@@ -1,0 +1,5831 @@
+@import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap');
+
+/* ==========================================
+   CSS Variables - Production Build
+   ========================================== */
+:root {
+    /* Card Dimensions */
+    --card-width: 320px;
+    --card-height: 440px;
+    --card-radius: 16px;
+
+    /* Default Template Assets (Gold) */
+    --template-frame: url('assets/templates/gold/frame.png');
+    --template-back: url('assets/templates/gold/back.jpg');
+    --template-mask: url('assets/templates/gold/mask.png');
+    --template-sparkle: url('assets/common/sparkle.png');
+
+    /* Typography */
+    --template-font: 'Teko', sans-serif;
+    --template-color: #D4AF37;
+    --template-blend-mode: hard-light;
+}
+
+/* ==========================================
+   Base Styles
+   ========================================== */
+body {
+    background-color: #121212;
+    background-image: radial-gradient(circle at 50% 50%, #2a2a2a 0%, #121212 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding-top: 60px;
+    overflow-y: auto;
+    /* Allow Scroll */
+    overflow-x: hidden;
+    font-family: 'Teko', sans-serif;
+}
+
+/* Controls Section */
+.controls {
+    margin-top: 40px;
+    /* Space between card and controls */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    z-index: 10;
+    padding-bottom: 20px;
+}
+
+/* Main Inputs Container */
+.text-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Compact spacing */
+    outline: none;
+    width: 100%;
+    max-width: 300px;
+    /* Slightly narrower for internal padding look */
+    margin: 0 auto;
+    padding: 5px 0;
+}
+
+select {
+    background: #333;
+    border: 1px solid #555;
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    height: 38px;
+    width: 80px;
+    /* Specific width for dropdown */
+    font-size: 14px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    /* Horizontal */
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    border-top: 1px solid #333;
+    /* Unified 1px Thickness */
+    border-bottom: none;
+    padding-top: 5px;
+    padding-bottom: 8px;
+    margin-bottom: 0;
+}
+
+/* Add bottom border to the last visible input group to close the grid */
+.input-group:last-child {
+    border-bottom: 1px solid #333;
+}
+
+/* ALL input-groups in frontInputs get bottom border */
+#frontInputs .input-group {
+    border-bottom: 1px solid #333;
+}
+
+/* Remove border-top from 2nd and 3rd items to avoid double border with previous item's border-bottom */
+#frontInputs .input-group+.input-group {
+    border-top: none;
+}
+
+.input-label {
+    width: 30%;
+    /* Reverted to 30% */
+    color: #eee;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    margin-bottom: 0;
+    font-family: 'Pretendard', sans-serif;
+    padding-right: 10px;
+}
+
+.text-inputs input,
+.text-inputs textarea,
+.text-inputs select {
+    background: transparent;
+    border: none;
+    color: #4CAF50;
+    padding: 0;
+    padding-left: 0;
+    font-size: 15px;
+    width: 70%;
+    /* Increased to 70% */
+    font-family: 'Pretendard', sans-serif;
+    text-align: left;
+    font-weight: 500;
+    outline: none;
+}
+
+.text-inputs input:focus,
+.text-inputs textarea:focus,
+.text-inputs select:focus {
+    outline: none;
+    color: #4CAF50;
+}
+
+.text-inputs input::placeholder,
+.text-inputs textarea::placeholder {
+    color: #454b53;
+}
+
+/* Reset Button Style */
+#refreshLogoBtn {
+    width: 100%;
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: 'Teko', sans-serif;
+}
+
+
+.refresh-btn {
+    background: #444;
+    border: 1px solid #555;
+    color: white;
+    width: 36px;
+    height: 38px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.refresh-btn:hover {
+    background: #666;
+}
+
+/* ... (upload btn code) ... */
+
+/* Card Container (3D Space) */
+.card {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    transform-style: preserve-3d;
+    /* Enable 3D space */
+    transition: transform 0.1s;
+    /* Smooth movement for tilt, 0.6s for flip will be handled in JS or specific class if needed */
+    will-change: transform;
+    border-radius: var(--card-radius);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    /* Indicate interaction */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.card img {
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+/* Hide images with empty src to prevent broken icon */
+img[src=""],
+img:not([src]) {
+    display: none !important;
+}
+
+/* Slower transition for the flip action */
+.card.is-flipping {
+    transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Elastic-like smooth ease */
+    pointer-events: none;
+    /* Lock card */
+}
+
+/* Indicators Removed */
+/* .carousel-indicators { display: none; } */
+
+/* Mobile Adjustments for 3D Carousel */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+    }
+
+    /* Bring side cards closer on mobile so they are visible */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-40%) translateZ(-150px) rotateY(15deg) scale(0.9) !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(40%) translateZ(-150px) rotateY(-15deg) scale(0.9) !important;
+    }
+
+    /* Ensure touches pass through if needed, but we want click */
+    .carousel-side {
+        opacity: 0.6;
+        /* More visible on mobile */
+    }
+}
+
+/* --- Toast System --- */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    /* Allow clicking through container */
+}
+
+.toast {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Teko', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    border: 1px solid #444;
+
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease-out;
+    pointer-events: auto;
+    /* Allow clicking toast (e.g. to dismiss if we added X) */
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+.toast-error {
+    border-color: #f44336;
+    color: #f44336;
+}
+
+.toast-info {
+    border-color: #2196F3;
+    color: white;
+}
+
+.toast-icon {
+    font-size: 20px;
+}
+
+.toast-message {
+    color: white;
+}
+
+
+/* --- Custom Modal System --- */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10001;
+    /* Above Toasts */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.custom-modal-overlay.visible {
+    opacity: 1;
+}
+
+.custom-modal {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    font-family: 'Teko', sans-serif;
+}
+
+.custom-modal-overlay.visible .custom-modal {
+    transform: scale(1);
+}
+
+.custom-modal-content {
+    padding: 24px;
+    text-align: center;
+}
+
+.custom-modal-content h3 {
+    margin: 0 0 10px 0;
+    color: #D4AF37;
+    font-size: 24px;
+}
+
+.custom-modal-content p {
+    color: #ccc;
+    font-size: 18px;
+    margin: 0;
+    font-family: sans-serif;
+    /* Readable body text */
+}
+
+.custom-modal-actions {
+    display: flex;
+    border-top: 1px solid #333;
+}
+
+.modal-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 15px;
+    color: white;
+    font-family: 'Teko', sans-serif;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modal-btn:hover {
+    background: #333;
+}
+
+.modal-btn.confirm {
+    border-left: 1px solid #333;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.modal-btn.cancel {
+    color: #888;
+}
+
+.modal-btn.cancel:hover {
+    color: #fff;
+}
+
+/* Lock Scene during flip to prevent jitter from mousemove/leave */
+.scene.flipping-lock {
+    pointer-events: none;
+}
+
+/* Common Face Styles */
+.card__front,
+.card__back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--card-radius);
+    backface-visibility: hidden;
+    /* Hide back when rotated */
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+}
+
+/* Front Face */
+.card__front {
+    z-index: 2;
+    background-image: var(--template-back);
+    /* Fill with Card Back texture */
+    background-size: cover;
+    background-position: center;
+    background-color: #000;
+    /* Fallback */
+}
+
+/* Back Face */
+/* Back Face */
+.card__back {
+    transform: rotateY(180deg);
+    /* Initially flipped */
+    background-image: var(--template-back);
+    background-size: cover;
+    background-position: center;
+    background-color: #111;
+    overflow: hidden;
+    /* Ensure blurred image doesn't leak */
+}
+
+/* Dynamic Blurred Background */
+.card__back-blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--template-back);
+    /* Default Image */
+    background-size: cover;
+    background-position: center;
+    /* Dynamic Filter Chain */
+    filter: blur(var(--back-blur, 10px)) brightness(var(--back-brightness, 50%)) grayscale(var(--back-grayscale, 0%)) var(--back-filter-url, opacity(1));
+    transform: scale(1.0);
+    z-index: 1;
+    transition: background-image 0.3s;
+}
+
+/* Halftone Effect Overlay */
+.card__back-blur.fx-halftone {
+    filter: grayscale(100%) contrast(150%) var(--back-filter-url, opacity(1)) !important;
+}
+
+.card__back-blur.fx-halftone::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Dot Pattern */
+    background: radial-gradient(circle, #000 2px, transparent 2.5px);
+    background-size: 8px 8px;
+    mix-blend-mode: hard-light;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Golden Frame Overlay */
+.card__back-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--template-back);
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: multiply;
+    z-index: 2;
+}
+
+.card__back-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Use Holo Gradient instead of Template Back for the SHINE effect */
+    background-image: var(--holo-gradient, linear-gradient(115deg, transparent 25%, rgba(255, 0, 128, 0.7) 40%, rgba(0, 255, 255, 0.7) 45%, rgba(255, 215, 0, 0.7) 50%, transparent 60%));
+    /* Fixed: Use --holo-scale for hybrid scaling logic (Tiling vs Calc) */
+    background-size: var(--holo-scale, 200%);
+
+    /* Dynamic Tilt Position */
+    background-position: calc(var(--holo-pos-x, 50) * 1%) calc(var(--holo-pos-y, 50) * 1%);
+
+    /* Ensure repeats work for Tiling Mode */
+    background-repeat: repeat;
+
+    mix-blend-mode: color-dodge;
+    filter: brightness(1.1) contrast(1.1);
+    z-index: 3;
+    /* Lift above frame/blur */
+    pointer-events: none;
+}
+
+/* Gravity Logo Container */
+.card__back-logo {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Perfectly centered 90x90 box */
+    z-index: 5;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    /* Key to knockout effect: White becomes transparent, Black stays black */
+}
+
+/* Corrected Logic for Text Elements */
+
+.card__name {
+    position: absolute;
+    bottom: 24px;
+    left: 28px;
+    font-size: 26px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+    letter-spacing: 1px;
+    line-height: 1;
+    z-index: 2000 !important;
+    /* Auto-fit text support */
+    max-width: calc(100% - 56px);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+
+.file-upload-btn {
+    background: #333;
+    padding: 10px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    border: 1px solid #555;
+    transition: background 0.2s;
+    display: inline-block;
+    color: white;
+    font-family: sans-serif;
+}
+
+.file-upload-btn:hover {
+    background: #444;
+}
+
+.file-upload-btn input {
+    display: none;
+}
+
+.scene {
+    perspective: 1000px;
+}
+
+/* Duplicate .card definition removed - consolidated with main .card at line 119 */
+
+.card__front {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    /* Fallback */
+}
+
+.card__frame {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 2;
+    /* Frame above art */
+    pointer-events: none;
+}
+
+/* Art Container - Holds the images and masks overflow */
+.card__art-container {
+    position: absolute;
+    /* Expanded to Full Card Area (User Request: 100%) */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    border-radius: 6px;
+    /* Matches Card Radius */
+    overflow: hidden;
+    z-index: 1;
+    /* Behind Frame (z-index 2) */
+    pointer-events: none;
+    /* Default: click through to card (for tilt) */
+}
+
+/* Edit Mode Active Class */
+.card__art-container.interactive {
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+    /* Prevent scroll when dragging */
+}
+
+.card__art-container.interactive:active {
+    cursor: grabbing;
+}
+
+/* Main Art & Overlay - Unified Positioning */
+.card__grade,
+.card__edition,
+.card__label {
+    position: absolute;
+    z-index: 2000 !important;
+    white-space: nowrap;
+    /* Required for autoFitText */
+    /* Must beat z-index 999 */
+}
+
+.card__art,
+.card__art-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Default: Centered, Fill Height (User Requirement) */
+    width: auto;
+    height: 100%;
+    min-width: 100%;
+    /* Ensure width also covers if aspect ratio is wide */
+
+    /* Transform is managed by JS, but start centered */
+    transform: translate(-50%, -50%) scale(1);
+    transform-origin: center center;
+
+    object-fit: cover;
+    /* Fallback for safe rendering */
+    transition: opacity 0.5s;
+    /* Keep transition, remove transform transition for smooth Drag */
+
+    /* Sharper image rendering - prevent subpixel blur */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+.card__art {
+    opacity: 0;
+    z-index: 1;
+    /* Relative to container */
+}
+
+.card__art.visible {
+    opacity: 1;
+}
+
+/* Vibrancy Overlay */
+.card__art-overlay {
+    opacity: 0.1;
+    /* 10% opacity */
+    mix-blend-mode: multiply;
+    visibility: hidden;
+    z-index: 2;
+}
+
+.card__art.visible+.card__art-overlay {
+    visibility: visible;
+}
+
+
+.card__art.visible {
+    opacity: 1;
+}
+
+/*
+   Holographic Foil Layer
+   Mixed with 'color-dodge', 'overlay', 'hard-light' or 'soft-light'
+*/
+.card__shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+
+    /*
+       THE SOLUTION:
+       Background is either the Rainbow Gradient OR a Custom Map Image.
+       The Texture is applied via MASK, utilizing Luminance (Black=Hide, White=Show).
+    */
+    background-image: var(--holo-bg-image, var(--holo-gradient, linear-gradient(115deg, transparent 25%, rgba(255, 0, 128, 0.7) 40%, rgba(0, 255, 255, 0.7) 45%, rgba(255, 215, 0, 0.7) 50%, transparent 60%)));
+    background-size: var(--holo-scale, 200%);
+    background-position: calc(var(--holo-pos-x, 50) * 1%) calc(var(--holo-pos-y, 50) * 1%);
+    background-repeat: repeat;
+    /* Ensure pattern tiles when scaled down */
+
+    /* MASKING MAGIC */
+    /* 1. Template Mask (Alpha) - Defines where foil exists on card */
+    /* 2. Texture Mask (Luminance) - Defines the grain/sparkle pattern */
+    -webkit-mask-image: var(--template-mask), var(--holo-mask-texture);
+    mask-image: var(--template-mask), var(--holo-mask-texture);
+
+    /* Sizing: Template uses 100% (Fit), Texture uses Variable (Default: cover which might blur on zoom) */
+    /* FIX: Use 'auto' or specific size for noise textures to keep them sharp */
+    -webkit-mask-size: 100% 100%, var(--holo-mask-size, cover);
+    mask-size: 100% 100%, var(--holo-mask-size, cover);
+
+    /* Repeat: Template=No, Texture=Repeat (if small) or No (if full) */
+    -webkit-mask-repeat: no-repeat, var(--holo-mask-repeat, repeat);
+    mask-repeat: no-repeat, var(--holo-mask-repeat, repeat);
+
+    /* Composition: INTERSECT (Source-In) */
+    /* We want the texture to show ONLY where the Template Mask allows it */
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+
+    /* Mask Mode: Template=Alpha, Texture=Luminance */
+    -webkit-mask-mode: alpha, luminance;
+    mask-mode: alpha, luminance;
+
+    /* Blend Mode for the layer vs Card */
+    mix-blend-mode: var(--holo-blend-mode, color-dodge);
+
+    /* Opacity */
+    opacity: var(--holo-opacity, 0.6);
+
+    /* Filter: Boost Contrast to remove 'Haze' and make sparkles pop */
+    filter: brightness(1.2) contrast(1.5);
+    /* Z-INDEX BOOST: User reported hiding issues. Ensure it stays ON TOP */
+    z-index: 10 !important;
+}
+
+/* --- HOLOGRAM LAYER 2 (Depth/Parallax) --- */
+.card__shine-layer2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Same level, blends with Layer 1 */
+    z-index: 999 !important;
+    /* NUCLEAR Z-INDEX KEPT */
+    pointer-events: none;
+
+    /* Independent Variables */
+    /* Fallback to Layer 1's gradient if Layer 2 is unset, effectively doubling it until changed */
+    /* Independent Variables: No fallback to Layer 1 */
+    /* Independent Variables: No fallback to Layer 1 */
+    background-image: var(--holo2-bg-image, var(--holo2-gradient, none));
+    background-size: var(--holo2-scale, 200%);
+    background-repeat: repeat;
+    /* Ensure pattern tiles */
+
+    /* Position Logic: Static Offset + Parallax Movement */
+    /* --parallax-x/y are set by JS during tilt (-50% to 50% range typically) */
+    /* Note: This is overridden by JS during mouse move, but provides initial position */
+    background-position: calc(var(--holo2-pos-x, 50) * 1%) calc(var(--holo2-pos-y, 50) * 1%);
+
+    /* Masking: Same Texture Logic, distinct appearance */
+    /* USER FIX: Allow Layer 2 to have its OWN mask (e.g., Full Card) instead of being clipped by Template Frame Mask */
+    /* NUCLEAR FALLBACK: If --holo2-mask is missing, default to NONE (Visible), not Template Mask (Frame) */
+    /* Masking: Independent. Default texture to visible (white) so valid gradients show up if Opacity > 0 */
+    -webkit-mask-image: var(--holo2-mask, none), var(--holo2-mask-texture, linear-gradient(#fff, #fff));
+    mask-image: var(--holo2-mask, none), var(--holo2-mask-texture, linear-gradient(#fff, #fff));
+
+    /* FIX: Allow Layer 2 Mask to be controlled */
+    -webkit-mask-size: 100% 100%, var(--holo2-mask-size, cover);
+    mask-size: 100% 100%, var(--holo2-mask-size, cover);
+
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-mode: alpha, luminance;
+    mask-mode: alpha, luminance;
+
+    /* KEY FIX: Lock Mask (Frame) - Force Static Center, but allow Texture Repeat */
+    -webkit-mask-position: center center, center center;
+    mask-position: center center, center center;
+
+    -webkit-mask-repeat: no-repeat, var(--holo2-mask-repeat, repeat);
+    mask-repeat: no-repeat, var(--holo2-mask-repeat, repeat);
+
+    /* KEY FIX: Force Pattern to Tile - Prevent Cutoff */
+    background-repeat: repeat !important;
+
+    mix-blend-mode: var(--holo2-blend-mode, color-dodge);
+    opacity: var(--holo2-opacity, 0);
+    /* Default Hidden */
+
+    filter: brightness(1.2) contrast(1.5);
+    transition: transform 0.1s ease-out;
+    /* For Parallax */
+}
+
+/* 
+   EMBOSS MODE (Physical Relief - Chisel/Offset Method)
+   To create REAL 3D depth, we need distinct Highlights and Shadows offset from each other.
+   1. Base: The Rainbow Gradient.
+   2. ::before (Shadow): Texture shifted Down-Right (+1px), Dark Mode (Multiply).
+   3. ::after (Highlight): Texture shifted Up-Left (-1px), Light Mode (Screen/Color Dodge).
+*/
+/* 
+   EMBOSS MODE (Refined: Glossy & Vivid)
+   1. Texture Overlay: Uses 'overlay' blend for a smooth, high-quality physical paper feel (No scribbles).
+   2. Hologram Base: Uses 'color-dodge' + High Brightness to create the "Projected Light" look (Glossy).
+*/
+.card__shine.emboss-mode {
+    /* BASE: The Rainbow Color - Boosted for Vibrancy */
+    background-image: var(--holo-gradient, linear-gradient(115deg, transparent 25%, rgba(255, 0, 128, 0.9) 40%, rgba(0, 255, 255, 0.9) 45%, rgba(255, 215, 0, 0.9) 50%, transparent 60%)) !important;
+    background-size: var(--holo-scale, 200%) !important;
+
+    /* Mask: Clip to Card Template */
+    -webkit-mask-image: var(--template-mask) !important;
+    mask-image: var(--template-mask) !important;
+
+    /* BLEND: Color Dodge is KEY for the "Projected Light" feel */
+    mix-blend-mode: color-dodge !important;
+    opacity: 1 !important;
+
+    /* FILTER: High Brightness/Contrast makes it look "Jjang" (Vivid/Glossy) */
+    filter: brightness(1.3) contrast(1.4) saturate(1.2);
+
+    /* Reset default blend props */
+    background-blend-mode: normal !important;
+    -webkit-mask-composite: source-over !important;
+    mask-composite: source-over !important;
+}
+
+/* TEXTURE OVERLAY (Physical Surface) */
+.card__shine.emboss-mode::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-image: var(--holo-mask-texture);
+    background-size: var(--holo-scale, 200%);
+    background-repeat: repeat;
+
+    /* Static Center Position (Fixed Surface) */
+    background-position: center;
+
+    /* BLEND: Overlay creates the "Material" feel without destroying the light */
+    mix-blend-mode: overlay;
+
+    /* Soft Touch: Clean Paper Texture */
+    filter: grayscale(100%) contrast(1.2);
+
+    opacity: 0.6;
+    /* Subtle texture, letting light dominate */
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Remove Shadow Layer (Source of Artifacts) */
+.card__shine.emboss-mode::before {
+    content: none;
+    display: none;
+}
+
+/* Back Image with Mask Support */
+.card__back-blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* Decoupled from template image. Now a Solid Color Layer for Pattern/Decal */
+    /* FIX: Use transparent default so --template-back on .card__back shows through */
+    background-image: none;
+    background-color: var(--back-mask-color, transparent);
+
+    /* Combined Filters (Blur, Brightness, Grayscale, SVG Filter) */
+
+    /* Combined Filters (Blur, Brightness, Grayscale, SVG Filter) */
+    filter: var(--back-filter-url, none) blur(var(--back-blur, 0px)) brightness(var(--back-brightness, 100%)) grayscale(var(--back-grayscale, 0%));
+    z-index: 1;
+
+    /* Support for Back Mask (hiding parts of the user image) */
+    -webkit-mask-image: var(--back-mask, none);
+    mask-image: var(--back-mask, none);
+
+    /* Ensure Black = Hidden */
+    -webkit-mask-mode: luminance;
+    mask-mode: luminance;
+
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+
+    /* User Controls */
+    opacity: var(--back-mask-opacity, 1);
+    mix-blend-mode: var(--back-mask-blend, normal);
+}
+
+/* 
+   GLOSSY COATING LAYER (Spot UV) 
+   - Positioned above holograms but below/near text 
+   - Uses a Mask to define where the Gloss appears
+   - Uses a Radial Gradient that follows the mouse (via background-position)
+*/
+.card__coating {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1999;
+    /* Top of card surface, below text (2000) */
+    pointer-events: none;
+
+    /* The Light Source: A tight, bright white radial gradient */
+    background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 20%, transparent 50%);
+    background-size: 150% 150%;
+    /* Larger than card so we can move it around */
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Set by JS */
+
+    opacity: var(--coating-opacity, 0);
+    mix-blend-mode: screen;
+    /* Glossy feel */
+
+    /* The Mask: User uploaded black/white image */
+    -webkit-mask-image: var(--coating-mask, none);
+    mask-image: var(--coating-mask, none);
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+}
+
+/* Additional Glare for the surface reflection */
+.card__glare {
+    /* display: none; Removed to restore highlight */
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle,
+            rgba(255, 255, 255, 0.6) 0%,
+            rgba(255, 255, 255, 0) 50%);
+    opacity: 0.8;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    z-index: 4;
+    transform: translate(0, 0);
+    transition: opacity 0.2s;
+}
+
+/* Text Overlays */
+.card__info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000 !important;
+    /* Ensure Container is above Hologram (999) */
+    pointer-events: none;
+    /* Let clicks pass through to card for tilt */
+    /* font-family: 'Helvetica Neue', Arial, sans-serif; <-- Removed this to inherit Teko */
+}
+
+/* Corrected Logic for Text Elements (Removing Duplicates) */
+
+.card__name {
+    position: absolute;
+    bottom: 18px;
+    /* Lowered 1px from 19px */
+    left: 33px;
+    /* Moved right 5px from 28px */
+    font-size: 26px;
+    /* Reduced 20% from 32px */
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+    letter-spacing: 1px;
+    line-height: 1;
+    font-family: var(--template-font);
+}
+
+.card__grade {
+    position: absolute;
+    bottom: 12px;
+    /* Raised 1px from 11px */
+    right: 27px;
+    /* Moved left 1px from 26px */
+    width: 38px;
+    height: 38px;
+
+    /* Using block + line-height for better background-clip support than flex */
+    display: block;
+    text-align: center;
+    line-height: 38px;
+
+    font-size: 26px;
+    /* Reduced 10% from 29px */
+    font-weight: 700;
+    font-family: var(--template-font);
+
+    z-index: 6;
+
+    /* Gold Texture */
+    /* Decoupled from --template-back so user uploads don't override the grade texture */
+    background-image: var(--grade-texture, var(--template-back));
+    background-size: cover;
+    background-position: center;
+
+    /* Ensure background-clip works */
+    -webkit-background-clip: text;
+    /* Safari/Chrome */
+    background-clip: text;
+    /* Standard */
+
+    /* Text color must be transparent to show background */
+    color: transparent;
+}
+
+/* The Edition text at the very bottom */
+.card__edition {
+    position: absolute;
+    bottom: 0px;
+    /* Lowered 3px from 3px */
+    width: 100%;
+    text-align: center;
+    font-size: 9px;
+    /* Reduced ~20% from 11px */
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #000;
+    letter-spacing: 0.5px;
+    text-shadow: none;
+    font-family: var(--template-font);
+}
+
+/* Removing any rogue .card__name-container blocks or duplicates below this line */
+
+/* --- NEW UI: Merged Carousel Stage --- */
+
+.carousel-stage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px;
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    gap: 40px;
+    /* Space between cards */
+}
+
+/* Center Stage (The Active Card) */
+.scene {
+    /* Main card container buffer - Fixes flip jitter */
+    width: 400px;
+    height: 540px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+/* Side Cards (Prev/Next) */
+.carousel-side {
+    width: calc(var(--card-width) * 0.8);
+    /* Slightly smaller visual */
+    height: calc(var(--card-height) * 0.8);
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--card-radius);
+    z-index: 1;
+    z-index: 1;
+}
+
+/* Halftone Effect Overlay */
+.card__back-blur.fx-halftone {
+    filter: grayscale(100%) contrast(150%) var(--back-filter-url, opacity(1)) !important;
+}
+
+
+
+.carousel-side.prev {
+    transform: scale(0.9) translateZ(-50px) rotateY(25deg);
+    filter: grayscale(0.8) brightness(0.5);
+}
+
+.carousel-side.next {
+    transform: scale(0.9) translateZ(-50px) rotateY(-25deg);
+    filter: grayscale(0.8) brightness(0.5);
+}
+
+.carousel-side:hover {
+    opacity: 0.6;
+    transform: scale(0.95) translateZ(-20px) rotateY(0deg);
+    filter: grayscale(0.5) brightness(0.7);
+}
+
+/* Logic: Active Content is injected via JS background-image */
+.carousel-side.has-content {
+    opacity: 0.8;
+    filter: brightness(0.8) blur(0px);
+    transform: translate(-50%, -50%) translateX(-300px) scale(0.9) rotateY(15deg);
+    /* Slight pop on hover? */
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(300px) scale(0.9) rotateY(-15deg);
+}
+
+/* Ensure Main Card is Top */
+.card {
+    position: relative;
+    z-index: 10;
+    /* Main card styles handled elsewhere, but ensure it pops */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* Hidden state */
+.carousel-side:not(.has-content) {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.grade-selector {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    /* GAP REDUCTION: Reduced from 10px to 5px */
+    margin-top: 5px;
+    /* STABILIZE: Reserve space so buttons below don't jump */
+    min-height: 60px;
+    align-items: center;
+}
+
+.grade-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-family: 'Teko', sans-serif;
+    font-size: 18px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.grade-icon-btn:hover {
+    transform: translateY(-3px);
+    border-color: #888;
+}
+
+.grade-icon-btn.active {
+    border-color: #D4AF37;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+}
+
+/* Editor UI */
+.editor-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #D4AF37;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-family: 'Teko', sans-serif;
+    font-size: 18px;
+    transition: transform 0.2s;
+}
+
+.editor-toggle-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Hide default desktop fixed positioning which caused layout issues */
+/* .editor-toggle-btn { ... } - Overridden in #app-container section */
+
+.editor-panel {
+    position: fixed;
+    top: 100px;
+    /* Moved down to avoid button overlap */
+    /* Moved UP from 70px */
+    right: 20px;
+    width: 320px;
+    max-height: 90vh;
+    /* Increased height capacity */
+    background: rgba(18, 18, 18, 0.95);
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: #fff;
+
+    z-index: 10001;
+    /* Higher than Bottom Nav (10000) */
+    display: flex;
+    flex-direction: column;
+    box-shadow: -5px 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    font-family: sans-serif;
+}
+
+.editor-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+.editor-header {
+    padding: 15px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.editor-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #D4AF37;
+}
+
+.editor-header button {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.editor-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 15px 15px 15px;
+    /* Reduced TOP padding from 15px */
+}
+
+.editor-section {
+    margin-bottom: 20px;
+}
+
+.editor-section h4 {
+    margin: 0 0 10px 0;
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.control-row label {
+    color: #aaa;
+}
+
+.control-row input[type="text"],
+.control-row input[type="number"] {
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    padding: 4px;
+    border-radius: 4px;
+    width: 60px;
+    text-align: right;
+}
+
+.control-row input[type="range"] {
+    width: 100px;
+}
+
+.editor-footer {
+    padding: 15px;
+    border-top: 1px solid #333;
+    text-align: center;
+}
+
+.action-btn {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+}
+
+.action-btn:hover {
+    background: #444;
+    border-color: #D4AF37;
+}
+
+/* Back Mode Toggle Radio */
+.back-mode-toggle {
+    font-family: 'Pretendard', sans-serif;
+}
+
+.mode-radio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.radio-circle {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #555;
+    background: transparent;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.radio-circle.active {
+    border-color: #fff;
+}
+
+.radio-circle.active::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.mode-label {
+    color: #888;
+    font-size: 11px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.mode-radio:hover .mode-label {
+    color: #bbb;
+}
+
+.radio-circle.active+.mode-label {
+    color: #fff;
+}
+
+/* My Cards Toggle Button */
+.my-cards-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 140px;
+    /* Left of Editor Btn */
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-family: 'Teko', sans-serif;
+    font-size: 18px;
+    transition: transform 0.2s;
+}
+
+/* --- Mobile Responsiveness --- */
+
+@media (max-width: 99999px) {
+
+    body {
+        /* Mobile Layout: Vertical Stack */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 80px;
+        /* Space for Bottom Nav */
+    }
+
+    /* 1. Card Section (Top) */
+    .carousel-stage {
+        order: 1;
+        /* Visually First */
+        flex-direction: column;
+        height: auto;
+        gap: 20px;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        perspective: none;
+        flex: none;
+        /* Don't expand */
+    }
+
+    .scene {
+        width: 100%;
+        height: 460px;
+        /* Increased to fit unscaled height + margins */
+        perspective: 1000px;
+        /* Scale down the 320px Card to fit mobile (approx 0.85x) */
+        transform: scale(0.85);
+        transform-origin: center top;
+        margin-bottom: -40px;
+        /* Compensate for empty space from scale */
+    }
+
+    /* Hide side cards on mobile */
+    .carousel-side {
+        display: none;
+    }
+
+    /* 2. Controls Section (Bottom) */
+    .controls {
+        order: 2;
+        /* Visually Second */
+        width: 90%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .text-inputs {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    /* Conflicting grid styles removed to fix layout */
+
+    /* Conflicting label width removed */
+
+    /* Hide old Save Button if we want to move it? 
+       Actually user design has "Save Card" button at bottom of inputs.
+       The existing #saveCardBtn is inside .controls, so it will sit below inputs naturally.
+    */
+    #saveCardBtn {
+        width: 100% !important;
+        /* Full width button on mobile */
+        margin-top: 30px !important;
+    }
+
+    /* Editor Panel Mobile */
+    /* Editor Panel Mobile */
+    .editor-panel {
+        top: auto;
+        bottom: 100px !important;
+        /* Much higher to ensure Save button is above bottom-nav */
+        right: 0;
+        left: 0;
+        width: 100%;
+        max-height: calc(100vh - 150px);
+        /* Avoid Nav (70px bottom) + extra space */
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* Ensure editor footer is fully visible */
+    .editor-panel .editor-footer {
+        padding-bottom: 20px;
+    }
+
+    .editor-panel:not(.hidden) {
+        transform: translateY(0);
+    }
+
+    .editor-panel.hidden {
+        transform: translateY(calc(100% + 150px));
+        /* Ensure fully hidden regardless of content height */
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Hide Desktop Toggles if they conflict */
+    .my-cards-toggle-btn {
+        display: none;
+        /* Replaced by Bottom Nav */
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+        grid-template-columns: repeat(3, 1fr);
+        /* 3 Columns like design */
+        gap: 10px;
+        padding-bottom: 80px;
+    }
+
+    /* Detail Modal */
+    .detail-content-wrapper {
+        width: 95%;
+        height: 90%;
+        flex-direction: column;
+    }
+
+    .detail-scene {
+        width: 100%;
+        height: 60%;
+        transform: scale(0.65);
+        /* Reduced per user request (-20%) */
+    }
+
+
+    /* --- NEW UI OVERHAUL (Design Match) --- */
+
+    /* 0. Hide Admin Editor Button */
+    .editor-toggle-btn {
+        display: none !important;
+    }
+
+    /* 1. Background & General */
+    body {
+        background-color: #111216;
+        /* Darker Theme */
+        background-image: none;
+    }
+
+    /* 2. Controls Area */
+    .controls {
+        width: 100%;
+        padding: 0 24px;
+        box-sizing: border-box;
+    }
+
+    /* 3. Action Buttons Row (Adjust / Upload) */
+    .button-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 5px !important;
+        /* Reduced spacing */
+    }
+
+    .button-row .action-btn,
+    .button-row .file-upload-btn {
+        background: transparent;
+        border: 1px solid #444;
+        color: white;
+        border-radius: 4px;
+        /* Square styling */
+        padding: 12px 0;
+        font-family: 'Inter', sans-serif !important;
+        /* Minimalist font */
+        font-size: 14px;
+        font-weight: 500;
+        text-transform: none;
+        /* No CAPS */
+        letter-spacing: 0;
+        flex: 1;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* PRESSED STATE (Active) - User Request #454b52 */
+    .button-row .action-btn:active,
+    .button-row .file-upload-btn:active {
+        background: #454b52 !important;
+        border-color: #555 !important;
+        /* Subtle border match */
+        transition: none;
+        /* Instant feedback */
+    }
+
+    /* Remove Emoji from button text if possible via CSS? No, text is in HTML. 
+       I might need to change HTML text too? User said "CSS Only" implies I should try to make it work.
+       The button text "📐 Adjust Image" is in HTML. 
+       I can't change text content via CSS easily. 
+       I will leave text as is for now, but style the box. */
+
+    /* 4. Input Fields Grid System */
+    .text-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "name name"
+            "group group"
+            "rank label"
+            "font refresh";
+        /* Font/Refresh logic existing */
+        gap: 20px 12px;
+        width: 100%;
+    }
+
+    /* Mobile Input Overrides Removed to follow Global Style */
+
+    /* 5. Save Button (Green, Large) */
+    #saveCardBtn {
+        background: #20d189 !important;
+        /* Emerald Green */
+        color: #000 !important;
+        border: none !important;
+        font-weight: 700;
+        font-size: 16px;
+        padding: 16px 0;
+        border-radius: 4px;
+        width: 100%;
+        margin-top: 40px !important;
+        text-transform: none;
+        /* No CAPS */
+    }
+
+    /* 6. Bottom Nav */
+    .bottom-nav {
+        background: #111216;
+        border-top: 1px solid #333;
+        height: 70px;
+    }
+
+    .nav-btn {
+        color: #666;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        border: none;
+    }
+
+    .nav-btn.active {
+        color: #20d189;
+        border-top: 2px solid #20d189;
+    }
+}
+
+/* End Mobile Override */
+
+/* NOTE: .bottom-nav styles are defined at end of file (line ~5654) */
+
+/* Card Label Style */
+.card__label {
+    position: absolute;
+    bottom: 40px;
+    /* Adjust position based on design */
+    right: 28px;
+    font-size: 12px;
+    color: var(--text-color, #fff);
+    font-family: var(--font-family, 'Teko'), sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+/* Gallery Overlay */
+.gallery-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.gallery-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    /* Ensure it doesn't block clicks */
+}
+
+.gallery-container {
+    width: 90%;
+    height: 90%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+
+.gallery-header {
+    padding: 20px 30px;
+    background: #111;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gallery-header h2 {
+    margin: 0;
+    color: #fff;
+    font-family: 'Teko', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+}
+
+.gallery-close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 32px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.gallery-close-btn:hover {
+    color: white;
+}
+
+.gallery-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+/* Label Grouping */
+.gallery-section {
+    margin-bottom: 40px;
+}
+
+.gallery-section-title {
+    color: #D4AF37;
+    font-size: 24px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    font-family: 'Teko', sans-serif;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Remove margin from the very first section to touch header */
+/* Update: User wants MORE space now between header and edition */
+.gallery-section:first-child {
+    margin-top: 15px !important;
+}
+
+.group-delete-btn {
+    background: #FF0000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: none;
+    transition: background 0.2s;
+    height: auto;
+}
+
+.group-delete-btn:hover {
+    background: #cc0000;
+}
+
+/* Main Grid Layout */
+.gallery-grid {
+    display: grid;
+    /* Strict width for perfect scale of 320px -> 160px (0.5 scale) */
+    grid-template-columns: repeat(auto-fill, 160px);
+    gap: 30px;
+    padding-bottom: 50px;
+    justify-content: center;
+}
+
+
+.gallery-item {
+    /* Slot size is fixed 160x220px driven by the grid */
+    height: 220px;
+    position: relative;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.gallery-item:hover {
+    z-index: 100;
+}
+
+/* Scaling Wrapper */
+.thumbnail-scale-wrapper {
+    width: var(--card-width);
+    /* Internal real size matching card */
+    height: var(--card-height);
+    transform: scale(0.5);
+    /* Scale down to fit 160px */
+    transform-origin: 0 0;
+    overflow: hidden;
+    position: relative;
+    border-radius: 4.5% / 3.5%;
+    background: transparent !important;
+    /* REMOVED BLACK BG */
+    pointer-events: none;
+    /* Prevent interaction inside thumb */
+
+    /* Force GPU Rendering for accurate scale */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* Thumbnail Card specific overrides */
+.thumbnail-card {
+    width: 100% !important;
+    height: 100% !important;
+    /* Ensure no margins/padding mess up the scale */
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    /* The wrapper handles scale */
+}
+
+/* Hide shine/glare in thumbnail to reduce noise */
+.thumbnail-card .card__shine,
+.thumbnail-card .card__glare {
+    display: none !important;
+}
+
+/* Ensure Text scales and is visible - remove any positioning resets! */
+.thumbnail-card .card__info {
+    opacity: 1 !important;
+    /* Do NOT reset positioning here. Let it inherit from .card__info or inline styles */
+}
+
+/* Hover Overlay */
+.gallery-card-hover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Matches the 160x220 slot */
+    background: rgba(0, 0, 0, 0.6);
+    color: #D4AF37;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Teko', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border-radius: 4.5% / 3.5%;
+    /* Match card radius approx */
+}
+
+.gallery-item:hover .gallery-card-hover-overlay {
+    opacity: 1;
+}
+
+/* --- Detail Modal --- */
+.detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    /* Force Top */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s;
+    perspective: 1500px;
+}
+
+/* ... existing code ... */
+
+/* Invisible Hit Areas for Desktop/Touch navigation assistance */
+.nav-hit-area {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 30%;
+    z-index: 90;
+    /* Removed debug display:none */
+}
+
+.detail-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.detail-modal-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.98);
+    backdrop-filter: blur(15px);
+}
+
+/* --- NEW DETAIL CAROUSEL --- */
+.detail-carousel-stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    /* Full height for centering */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+    perspective: 1200px;
+    z-index: 100;
+    /* Higher than Nav Areas */
+    pointer-events: auto;
+    /* Enable touch/swipe events on the stage */
+}
+
+.carousel-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform-style: preserve-3d;
+}
+
+.detail-card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.detail-card .card__front,
+.detail-card .card__back {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.detail-card .card__back {
+    transform: rotateY(180deg);
+}
+
+.detail-card-wrapper {
+    position: absolute;
+    width: 320px;
+    height: 440px;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s, filter 0.4s;
+    /* Easing */
+    will-change: transform, opacity, filter;
+    perspective: 1000px;
+    /* For Tilt/Flip */
+
+    /* Mobile Interaction Fixes - NUCLEAR */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    /* Prevent Callout (Save Image etc) */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+}
+
+/* NUCLEAR: Force all children to ignore native selection */
+.detail-card-wrapper * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-drag: none !important;
+}
+
+/* NUCLEAR V2: Explicitly Kill Image Interaction (Source of Blue Flash) */
+.detail-card-wrapper img {
+    pointer-events: none !important;
+    -webkit-user-drag: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* NUCLEAR V3: Kill ALL pointer events on card children - wrapper ONLY should receive events */
+.detail-card-wrapper .card,
+.detail-card-wrapper .card * {
+    pointer-events: none !important;
+}
+
+/* Allow vertical scroll but prevent other gestures if needed, or 'none' if full control */
+
+
+/* Carousel Positions */
+
+/* Center: Full Size, Clear */
+.detail-card-wrapper.pos-center {
+    z-index: 200;
+    /* Top Priority */
+    transform: scale(0.9);
+    /* Reduced by 20% (was 1.1) */
+    opacity: 1;
+    filter: brightness(1) blur(0px);
+    cursor: pointer;
+    pointer-events: auto !important;
+    /* FORCE CLICK */
+
+    /* DEBUG BORDER - Remove later */
+    /* border: 2px solid red; */
+}
+
+/* Sides: Smaller, Darker, Blurred, Further Away */
+.detail-card-wrapper.pos-left {
+    z-index: 10;
+    transform: translateX(-120%) scale(0.6) rotateY(25deg);
+    /* Pushed further left */
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    pointer-events: none;
+}
+
+.detail-card-wrapper.pos-right {
+    z-index: 10;
+    transform: translateX(120%) scale(0.6) rotateY(-25deg);
+    /* Pushed further right */
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    pointer-events: none;
+}
+
+/* --- MOBILE DETAIL VIEW OVERRIDE --- */
+@media (max-width: 500px) {
+    .detail-card-wrapper.pos-left {
+        /* Pull closer for narrow screens */
+        transform: translateX(-55%) scale(0.55) rotateY(25deg);
+        opacity: 0.6;
+    }
+
+    .detail-card-wrapper.pos-right {
+        /* Pull closer for narrow screens */
+        transform: translateX(55%) scale(0.55) rotateY(-25deg);
+        opacity: 0.6;
+    }
+}
+
+/* Exit States for Animation */
+.detail-card-wrapper.pos-hidden-left {
+    transform: translateX(-180%) scale(0.5) rotateY(45deg);
+    opacity: 0;
+    z-index: 0;
+}
+
+.detail-card-wrapper.pos-hidden-right {
+    transform: translateX(180%) scale(0.5) rotateY(-45deg);
+    opacity: 0;
+    z-index: 0;
+}
+
+/* Action Buttons Area */
+/* Action Buttons Area - Revised Layout */
+.detail-actions {
+    position: fixed;
+    /* Fixed to viewport to prevent cutoff */
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    /* Mobile Safe Area */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    /* Matches card width for neatness */
+    display: flex;
+    justify-content: space-between;
+    /* Delete on left, Group on Right */
+    align-items: center;
+    z-index: 10001;
+    /* Above mask */
+    gap: 10px;
+    background: transparent;
+    /* Reset old background */
+    border: none;
+    /* Reset old border */
+    overflow: visible;
+    /* Allowing buttons to sit freely */
+}
+
+.action-group-right {
+    display: flex;
+    gap: 0;
+    /* Connected buttons */
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.action-btn {
+    border: none;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    /* Clean sans-serif like image */
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: capitalize;
+    /* "Delete" instead of "DELETE" */
+}
+
+/* Specific Button Styles */
+
+/* DELETE: Red Standalone */
+.delete-btn {
+    background: #FF0000;
+    /* Vivid Red */
+    border-radius: 4px;
+    color: white;
+    font-weight: 600;
+    width: 100px;
+    flex: 0 0 100px;
+    text-align: center;
+    padding: 12px 0;
+}
+
+.delete-btn:hover {
+    background: #cc0000;
+}
+
+/* SHARE & EDIT: Grouped Dark */
+.action-group-right {
+    display: flex;
+    flex-grow: 1;
+    /* Take remaining space */
+    width: auto;
+}
+
+.action-group-right .action-btn {
+    border-radius: 0;
+    margin: 0;
+    flex-grow: 1;
+    /* Ensure equal width */
+    flex: 1;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.html-export-btn {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.html-export-btn:hover {
+    background: #333;
+    color: #00d2ff;
+    /* Cyan highlight */
+}
+
+.share-btn,
+.edit-btn {
+    background: transparent;
+    border-right: 1px solid #444;
+    /* Separator */
+    min-width: 80px;
+}
+
+.edit-btn {
+    border-right: none;
+    /* Last item */
+}
+
+.share-btn:hover,
+.edit-btn:hover {
+    background: #333;
+}
+
+
+/* Invisible Hit Areas for Desktop/Touch navigation assistance */
+.nav-hit-area {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 30%;
+    z-index: 500;
+}
+
+.nav-hit-area.left {
+    left: 0;
+}
+
+.nav-hit-area.right {
+    right: 0;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.detail-close-btn {
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.detail-close-btn:hover {
+    color: #D4AF37;
+    transform: scale(1.1);
+}
+
+/* Detail Scene */
+.detail-scene {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    perspective: 1000px;
+    transform: scale(1.2);
+    /* Scale up for better view */
+}
+
+
+
+/* Modal Input */
+.modal-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #333;
+    border: 1px solid #555;
+    color: white;
+    border-radius: 4px;
+    font-size: 16px;
+    outline: none;
+}
+
+.modal-input:focus {
+    border-color: #D4AF37;
+    background: #444;
+}
+
+/* Back Shine (Hologram Foil) */
+.card__back-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+
+    /* Reuse Front Hologram Variables */
+    background-image: var(--holo-bg-image, var(--holo-gradient, linear-gradient(115deg, transparent 25%, rgba(255, 0, 128, 0.7) 40%, rgba(0, 255, 255, 0.7) 45%, rgba(255, 215, 0, 0.7) 50%, transparent 60%)));
+
+    /* Use --holo-scale matching front */
+    background-size: var(--holo-scale, 200%);
+    background-position: 0% 0%;
+
+    background-repeat: repeat;
+
+    /* Masking - Use back-specific mask, NOT front template-mask */
+    -webkit-mask-image: var(--back-mask, none), var(--holo-mask-texture);
+    mask-image: var(--back-mask, none), var(--holo-mask-texture);
+    -webkit-mask-size: cover, cover;
+    mask-size: cover, cover;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-mode: alpha, luminance;
+    mask-mode: alpha, luminance;
+
+    /* Blend Mode */
+    mix-blend-mode: var(--holo-blend-mode, screen);
+    /* Opacity controlled by toggle - default enabled */
+    opacity: var(--back-holo-opacity, var(--holo-opacity, 0.6));
+    filter: brightness(1.0) contrast(2.0);
+}
+
+/* Hide back hologram when disabled */
+.card__back-shine[data-disabled="true"],
+.card__back.back-holo-disabled .card__back-shine {
+    opacity: 0 !important;
+}
+
+/* Back Glare Layer (Movement based) */
+.card__glare {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 50%);
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    /* Z-INDEX BOOST: Glare must be on top of Hologram (10) */
+    z-index: 20 !important;
+    transition: opacity 0.2s;
+}
+
+/* Back Glare (Surface Reflection) */
+.card__back-glare {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 50%);
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    z-index: 4;
+    transform: translate(0, 0);
+    transition: opacity 0.2s;
+}
+
+/* Refined Halftone (Blend Logic) */
+/* Re-defining to be sure */
+.card__back-blur.fx-halftone::after {
+    mix-blend-mode: overlay !important;
+    /* Better integration */
+    background: radial-gradient(circle, #000 1.5px, transparent 2px) !important;
+    background-size: 6px 6px !important;
+    opacity: 0.6;
+}
+
+/* --- Editor Toggle Button (Ensure Visibility) --- */
+.editor-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-family: 'Teko', sans-serif;
+    font-size: 18px;
+    transition: transform 0.2s;
+}
+
+.editor-toggle-btn:hover {
+    transform: scale(1.05);
+    background: #444;
+    border-color: #D4AF37;
+}
+
+/* Mobile Adjustment for Editor Toggle */
+@media (max-width: 99999px) {
+    .editor-toggle-btn {
+        top: 15px;
+        right: 15px;
+        padding: 8px 16px;
+        font-size: 16px;
+        background: rgba(34, 34, 34, 0.9);
+        backdrop-filter: blur(4px);
+    }
+}
+
+/* --- NEW UI OVERHAUL (Design Match Refined) --- */
+
+@media (max-width: 99999px) {
+
+    /* Global Font Update */
+    body,
+    button,
+    input,
+    select,
+    .input-label,
+    .nav-btn,
+    h1,
+    h2,
+    h3 {
+        font-family: 'Outfit', sans-serif !important;
+    }
+
+    /* 0. Hide Admin Editor Button & Pagination */
+    .editor-toggle-btn {
+        display: none !important;
+    }
+
+    .carousel-indicators {
+        display: none !important;
+    }
+
+    /* 1. Background & General */
+    body {
+        background-color: #13141a;
+        /* Specific Dark BG */
+        background-image: none;
+    }
+
+    /* 2. Controls Area - Centering Everything */
+    .controls {
+        width: 100%;
+        padding: 0;
+        /* Remove padding to handle % width items cleanly */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* Center children */
+    }
+
+    /* 3. Action Buttons Row (Joined Segmented Control) */
+    .button-row {
+        display: flex;
+        gap: 0 !important;
+        /* Joined */
+        width: 80%;
+        /* Targeted Width */
+        margin-bottom: 5px !important;
+        /* Reduced spacing */
+    }
+
+    .button-row .action-btn,
+    .button-row .file-upload-btn {
+        background: transparent;
+        border: 1px solid #454b52;
+        color: #fff;
+        padding: 14px 0;
+        font-size: 15px;
+        font-weight: 500;
+        flex: 1;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0;
+        /* Clear default radius */
+    }
+
+    /* Left Button Radius */
+    .button-row .action-btn {
+        border-right: none;
+        /* Merge borders */
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+    }
+
+    /* Right Button Radius */
+    .button-row .file-upload-btn {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
+
+
+    /* 4. Input Fields Grid System - 80% Width */
+    /* Conflicting grid styles removed */
+    .text-inputs {
+        width: 100%;
+        max-width: 420px;
+        /* Web Fix: Constrain width */
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* Desktop Input Overrides Removed to follow Global Style */
+
+    .text-inputs input:focus {
+        color: #20d189 !important;
+        outline: none;
+    }
+
+    .text-inputs input::placeholder {
+        color: #454b52;
+    }
+
+    /* Dimmed Placeholder */
+
+    /* 5. Save Button - Match Card Visual Width */
+    #saveCardBtn {
+        background: #20d189 !important;
+        /* Specific Green Key Color */
+        color: #13141a !important;
+        /* Dark Text on Green */
+        border: none !important;
+        font-weight: 700;
+        font-size: 16px;
+        padding: 16px 0;
+        border-radius: 4px;
+        /* Match visual width of card (scaled 0.85) */
+        width: calc(var(--card-width) * 0.85) !important;
+        margin-top: 40px !important;
+    }
+
+    /* 6. Bottom Nav */
+    .bottom-nav {
+        background: #13141a;
+        border-top: 1px solid #454b52;
+        height: 70px;
+    }
+
+    .nav-btn.active {
+        color: #20d189;
+        /* Green Key Color */
+        border-top: 2px solid #20d189;
+    }
+
+    /* 7. Card & Icons Specifics */
+    .scene {
+        display: flex;
+        justify-content: center;
+        /* Center Card */
+        margin-top: 0px;
+        /* Reduced from 20px to 0px to decrease gap */
+        /* Uniform Scaling: Reduce the entire card proportionally to fit screen. */
+        transform: scale(0.85);
+        transform-origin: top center;
+    }
+
+    /* Grade/Texture Selector Icons Adjustment */
+    .grade-selector {
+        /* User Req: Another 10% smaller (0.6), Another 20px higher (-40px) */
+        transform: scale(0.6);
+        margin-top: -40px;
+        margin-bottom: 10px;
+    }
+
+    /* REMOVED: .card__grade overrides.
+       Now using the exact same CSS as Desktop for internal card layout.
+       "Web Standard" enforced. */
+
+    /* 8. Tab View Architecture */
+    .view-section {
+        width: 100%;
+        min-height: calc(100vh - 70px);
+        /* Subtract Bottom Nav Height */
+        padding-bottom: 70px;
+        /* Exact Bottom Nav Height */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #111216;
+        /* Dark BG */
+    }
+
+    .view-section.hidden {
+        display: none !important;
+    }
+
+    /* Update Gallery Override for Tab View */
+    #myCardsGallery {
+        background: #111216;
+        /* Match Body BG */
+        position: static;
+        z-index: 1;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        padding-top: 20px;
+    }
+
+    #galleryContent {
+        width: 100% !important;
+        /* Revert to full width so header is full width */
+        margin: 0;
+    }
+
+    /* Main Title "Collections" */
+    /* Main Title "Collections" */
+    /* Main Title "Collections" */
+    .gallery-main-title {
+        color: white;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        /* Slightly larger */
+
+        /* Layout: 8vh Height (User Req) & Centered */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 5vh !important;
+        width: 100%;
+        flex-shrink: 0 !important;
+
+        /* Ensure Visibility & Sticky for Glassmorphism */
+        position: sticky !important;
+        top: 0;
+        z-index: 9999;
+
+        /* Glassmorphism Effect */
+        background: rgba(17, 18, 22, 0.7);
+        /* Semi-transparent Dark */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+
+        /* Design: Thin Gray Bottom Border */
+        border-bottom: 1px solid #333;
+
+        /* Reset Margins */
+        margin: 0;
+        margin-bottom: 0px !important;
+        /* Space between header and grid */
+    }
+
+    /* Group Section Style - FAST RESET */
+    /* Group Section Style - FAST RESET */
+    /* Group Section Style - FAST RESET */
+    /* Group Section Style - FAST RESET */
+    .gallery-section {
+        /* User Req: ALIGN TITLES AND GRID TOGETHER (90% Width) */
+        width: 90% !important;
+        margin: 5px auto 20px auto !important;
+        padding: 0;
+    }
+
+    /* ID Selector: The WRAPPER for Sections */
+    #galleryGrid {
+        display: block !important;
+        /* Stack sections vertically */
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0;
+
+        /* Add bottom space for nav */
+        padding-bottom: 80px !important;
+    }
+
+    .gallery-item {
+        width: 100%;
+        /* Fill the column */
+        aspect-ratio: 320/440;
+        /* Match standard card ratio */
+        position: relative;
+        /* Use tiny opacity to ensure hit-testing works if browser ignores transparent */
+        background: rgba(255, 255, 255, 0.001) !important;
+        border-radius: 0;
+        overflow: visible;
+        box-shadow: none !important;
+        border: none !important;
+
+        /* Ensure Clickable */
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        z-index: 10;
+
+        /* Activate Container Query Logic */
+        container-type: inline-size;
+        container-name: card-slot;
+    }
+
+    /* Adjust Scale Wrapper for 3-column cell */
+    .thumbnail-scale-wrapper {
+        width: var(--card-width);
+        /* Base 320px */
+        height: var(--card-height);
+        /* Base 440px */
+
+        /* 
+           PERFECT FIT FORMULA:
+           Scale = (New Width / Original Width)
+           New Width = 100cqw (100% of container query width)
+           Original Width = 320px
+           
+           Usage of 'cqw' allows us to decouple strictly from viewport units
+           and respond to the actual grid column size perfectly.
+        */
+        transform: scale(calc(100cqw / 320));
+        transform-origin: 0 0;
+
+        /* Force GPU */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transform-style: preserve-3d;
+        will-change: transform;
+
+        /* ENABLE CLICKS */
+        pointer-events: auto !important;
+    }
+
+}
+
+/* End Mobile Override */
+
+
+/* --- SIMPLIFIED ARROW NAVIGATION --- */
+/* Matches "My Card Expanded" Style with Arrows */
+
+.carousel-stage {
+    position: relative !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: var(--card-height);
+    perspective: 1200px !important;
+    overflow: visible !important;
+    transform-style: preserve-3d;
+
+    /* GAP REDUCTION: Reduced from 40px to 20px (User Req: -30%) */
+    margin-bottom: 20px;
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* Static Center State */
+    transform: translateZ(0) scale(1.0);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.1s ease-out;
+    /* Fast tilt response only */
+}
+
+/* NAVIGATION ARROWS */
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    /* Center vertically relative to stage */
+    transform: translateY(-50%);
+    width: 35px;
+    /* Reduced from 50px */
+    height: 35px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: white;
+    font-size: 14px;
+    /* Reduced from 20px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 300;
+    /* Above card */
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.nav-arrow:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.nav-arrow:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.nav-arrow.left {
+    left: 20px;
+    /* Spacing from screen edge or container edge */
+}
+
+.nav-arrow.right {
+    right: 20px;
+}
+
+/* Hide arrows if on mobile? Maybe make smaller */
+@media (max-width: 999px) {
+    .nav-arrow {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        /* Darker for contrast on mobile bg */
+    }
+
+    /* ARROWS: Fixed position for mobile edge-to-edge layout */
+    .nav-arrow {
+        position: fixed !important;
+        /* Card center: header(~50px) + scaled card height/2 (~143px) = ~193px */
+        top: 200px !important;
+        transform: translateY(-50%) !important;
+        z-index: 2000 !important;
+        pointer-events: auto !important;
+    }
+
+    /* Arrows pushed to screen edges */
+    .nav-arrow.left {
+        left: 10px !important;
+    }
+
+    .nav-arrow.right {
+        right: 10px !important;
+    }
+
+    /* --- MOBILE LAYOUT OPTIMIZATION (FANCY FIT) --- */
+
+    /* Global Mobile Reset - NUCLEAR OPTION */
+    html,
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-x: hidden;
+        justify-content: flex-start !important;
+        /* CRITICAL FIX for vertical centering */
+        align-items: stretch !important;
+        /* Ensure full width */
+        min-height: 100vh !important;
+        height: auto !important;
+    }
+
+    /* Hide Desktop-Only Editor Toggle on Mobile */
+    #editorToggleBtn {
+        display: none !important;
+    }
+
+    /* Ensure Container is flush */
+    #app-container {
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+    }
+
+    /* Ensure View Section starts at the absolute top */
+    /* This fixes the "vertical centering" issue causing 1/5th whitespace */
+    .view-section {
+        justify-content: flex-start !important;
+        padding-top: 10px !important;
+        /* Minimal safe area */
+        margin-top: 0px !important;
+        min-height: auto !important;
+        /* Allow it to shrink if needed */
+    }
+
+    /* 0. Header Adjustment */
+    #templateNameHeader {
+        margin-top: 4vh !important;
+        /* Reduced to 4% */
+        padding-top: 0px !important;
+        margin-bottom: 2vh !important;
+        /* 2% Gap to Card */
+        font-size: 18px !important;
+        line-height: 1 !important;
+    }
+
+    /* 1. Scale Down Card Stage Aggressively (0.65) - FIT ONE PAGE */
+    .carousel-stage {
+        transform: scale(0.65);
+        transform-origin: center top;
+        margin-bottom: -150px !important;
+        /* Aggressive closing of gap */
+        min-height: calc(var(--card-height) * 0.65) !important;
+        pointer-events: none !important;
+        /* Fix Tilt */
+    }
+
+    .carousel-stage .card {
+        pointer-events: auto !important;
+        /* Fix Tilt */
+    }
+
+    /* 1.1 Grade Selector (Icon) - Widen Gap */
+    .grade-selector {
+        transform: scale(0.5);
+        /* 0.5 Scale */
+        margin-top: 1vh !important;
+        /* 1% Gap from Card */
+        margin-bottom: 5px !important;
+    }
+
+    /* 2. Controls - Tighten Up & Ensure Z-Index */
+    .controls {
+        margin-top: 0px;
+        padding-bottom: 85px !important;
+        /* Massive padding to ensure Save btn shows */
+        gap: 2vh !important;
+        /* 2% Gap (Inputs <-> Save) */
+        position: relative;
+        z-index: 201 !important;
+        /* Ensure on top of card bottom edge */
+        pointer-events: none !important;
+        /* Fix Tilt: Allow clicks to pass through */
+    }
+
+    /* Restore interactions for buttons/inputs */
+    .controls>* {
+        pointer-events: auto !important;
+    }
+
+    /* NEW: Sync Button Heights (Adjust & Upload) - AGGRESSIVE RESET */
+    .button-row .action-btn,
+    .button-row .file-upload-btn {
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        /* Force exact height */
+        line-height: normal !important;
+        /* Reset line-height to let Flexbox centering work */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 10px !important;
+        box-sizing: border-box !important;
+        border-width: 1px !important;
+        /* Ensure border width is consistent */
+        margin: 0 !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        font-size: 13px !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+    }
+
+    /* 3. Stack Inputs Vertical (1 Column) - Ultra Compact */
+    .text-inputs {
+        grid-template-areas:
+            "name name"
+            "group group"
+            "rank rank"
+            "label label";
+        gap: 4px;
+        /* Tiny gap */
+        width: 90%;
+    }
+
+    /* INCREASED SPECIFICITY for Alignment */
+    #createCardView .text-inputs input,
+    #createCardView .text-inputs select {
+        width: 100% !important;
+        text-align: left !important;
+        /* Left Align */
+        padding-left: 10px !important;
+        /* Indent */
+        font-size: 13px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        height: 26px;
+        /* Ultra thin inputs */
+    }
+
+    /* Fix Label Alignment (Left) */
+    /* Conflicting label alignment removed */
+
+    /* 4. Save Button */
+    #saveCardBtn {
+        padding: 8px 30px !important;
+        font-size: 16px !important;
+        margin-top: 5px !important;
+    }
+
+    /* 5. Bottom Nav - Ultra Compact */
+    .bottom-nav {
+        height: 40px;
+        z-index: 9999;
+        /* Ensure nav is always top */
+    }
+
+    .bottom-nav .nav-btn {
+        font-size: 14px;
+        line-height: 40px;
+    }
+
+    /* Ensure Label Reset button fits */
+    /* Conflicting label centering removed */
+}
+
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+
+    /* SCALE FIX: Set to 1.0 to match Vanilla-Tilt default state (Prevents "Shrink" artifact) */
+    transform: translateZ(0) scale(1.0);
+
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+
+    /* DURATION: 0.4s (Master Timing) */
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* SYNCED DURATION: 0.4s (Matches Card) */
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS (ID SELECTORS) --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations (USING ID for Nuclear Specificity) */
+
+/* Next -> Center */
+#carouselNext.move-to-center {
+    /* Move to Center Position */
+    /* SCALE FIX: 1.0 Match .card + Tilt */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.0) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+
+    /* SEAMLESS SWAP FIXES */
+    border: none !important;
+    /* Remove 1px border */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    /* Match Main Card Shadow perfectly */
+}
+
+/* Prev -> Center */
+#carouselPrev.move-to-center {
+    /* SCALE FIX: 1.0 Match .card + Tilt */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.0) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+
+    /* SEAMLESS SWAP FIXES */
+    border: none !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Prev -> Out (Far Left) */
+#carouselPrev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+#carouselNext.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* UTILITY: NO TRANSITION (For Instant Snaps) */
+.no-transition {
+    transition: none !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    #carouselNext.move-to-center,
+    #carouselPrev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.0) !important;
+    }
+
+    /* Mobile Side -> Out */
+    #carouselPrev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    #carouselNext.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+
+    /* SCALE FIX: Set to 1.0 to match Vanilla-Tilt default state (Prevents "Shrink" artifact) */
+    transform: translateZ(0) scale(1.0);
+
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+
+    /* DURATION: 0.4s (Master Timing) */
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* SYNCED DURATION: 0.4s (Matches Card) */
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS (ID SELECTORS) --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations (USING ID for Nuclear Specificity) */
+
+/* Next -> Center */
+#carouselNext.move-to-center {
+    /* Move to Center Position */
+    /* SCALE FIX: 1.0 Match .card + Tilt */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.0) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+
+    /* SEAMLESS SWAP FIXES */
+    border: none !important;
+    /* Remove 1px border */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    /* Match Main Card Shadow perfectly */
+}
+
+/* Prev -> Center */
+#carouselPrev.move-to-center {
+    /* SCALE FIX: 1.0 Match .card + Tilt */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.0) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+
+    /* SEAMLESS SWAP FIXES */
+    border: none !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Prev -> Out (Far Left) */
+#carouselPrev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+#carouselNext.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* UTILITY: NO TRANSITION (For Instant Snaps) */
+.no-transition {
+    transition: none !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    #carouselNext.move-to-center,
+    #carouselPrev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    #carouselPrev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    #carouselNext.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+
+    /* SCALE FIX: Ensure exact match with Side Card's destination scale */
+    transform: translateZ(0) scale(1.1);
+
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+
+    /* DURATION: 0.4s (Master Timing) */
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* SYNCED DURATION: 0.4s (Matches Card) */
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS (ID SELECTORS) --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations (USING ID for Nuclear Specificity) */
+
+/* Next -> Center */
+#carouselNext.move-to-center {
+    /* Move to Center Position */
+    /* SCALE FIX: 1.1 Match .card */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+#carouselPrev.move-to-center {
+    /* SCALE FIX: 1.1 Match .card */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+#carouselPrev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+#carouselNext.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* UTILITY: NO TRANSITION (For Instant Snaps) */
+.no-transition {
+    transition: none !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    #carouselNext.move-to-center,
+    #carouselPrev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    #carouselPrev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    #carouselNext.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    /* DURATION: 0.4s (Master Timing) */
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* SYNCED DURATION: 0.4s (Matches Card) */
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS (ID SELECTORS) --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations (USING ID for Nuclear Specificity) */
+
+/* Next -> Center */
+/* Was: .carousel-side.next.move-to-center */
+#carouselNext.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+#carouselPrev.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+#carouselPrev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+#carouselNext.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* UTILITY: NO TRANSITION (For Instant Snaps) */
+.no-transition {
+    transition: none !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    #carouselNext.move-to-center,
+    #carouselPrev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    #carouselPrev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    #carouselNext.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    /* DURATION: 0.4s (Master Timing) */
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* SYNCED DURATION: 0.4s (Matches Card) */
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations */
+/* Next -> Center */
+.carousel-side.next.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+.carousel-side.prev.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+.carousel-side.prev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+.carousel-side.next.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* UTILITY: NO TRANSITION (For Instant Snaps) */
+.no-transition {
+    transition: none !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    .carousel-side.next.move-to-center,
+    .carousel-side.prev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    .carousel-side.prev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    .carousel-side.next.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Match gallery ease */
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations */
+/* Next -> Center */
+.carousel-side.next.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+.carousel-side.prev.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+.carousel-side.prev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+.carousel-side.next.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* UTILITY: NO TRANSITION (For Instant Snaps) */
+.no-transition {
+    transition: none !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    .carousel-side.next.move-to-center,
+    .carousel-side.prev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    .carousel-side.prev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    .carousel-side.next.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Match gallery ease */
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations */
+/* Next -> Center */
+.carousel-side.next.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+.carousel-side.prev.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+.carousel-side.prev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+.carousel-side.next.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    .carousel-side.next.move-to-center,
+    .carousel-side.prev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    .carousel-side.prev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    .carousel-side.next.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Match gallery ease */
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations */
+/* Next -> Center */
+.carousel-side.next.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+.carousel-side.prev.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+.carousel-side.prev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+.carousel-side.next.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    .carousel-side.next.move-to-center,
+    .carousel-side.prev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    .carousel-side.prev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    .carousel-side.next.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Match gallery ease */
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- SYNCHRONIZED CAROUSEL ANIMATIONS --- */
+/* 1. Center Card Animations */
+.card.move-to-prev {
+    /* Move to Left Position */
+    transform: translateX(-105%) scale(0.7) rotateY(25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+.card.move-to-next {
+    /* Move to Right Position */
+    transform: translateX(105%) scale(0.7) rotateY(-25deg) !important;
+    opacity: 0.8;
+    filter: brightness(0.4) blur(3px);
+    z-index: 100 !important;
+}
+
+/* 2. Side Card Animations */
+/* Next -> Center */
+.carousel-side.next.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+    /* On Top */
+}
+
+/* Prev -> Center */
+.carousel-side.prev.move-to-center {
+    /* Move to Center Position */
+    transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    opacity: 1;
+    filter: brightness(1) blur(0);
+    z-index: 200 !important;
+}
+
+/* Prev -> Out (Far Left) */
+.carousel-side.prev.move-out {
+    transform: translate(-50%, -50%) translateX(-200%) rotateY(45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+/* Next -> Out (Far Right) */
+.carousel-side.next.move-out {
+    transform: translate(-50%, -50%) translateX(200%) rotateY(-45deg) scale(0.5) !important;
+    opacity: 0;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* Mobile Scale Bases */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Mobile Movement Overrides */
+
+    /* Center -> Mobile Side */
+    .card.move-to-prev {
+        transform: translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    }
+
+    .card.move-to-next {
+        transform: translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    }
+
+    /* Mobile Side -> Center */
+    .carousel-side.next.move-to-center,
+    .carousel-side.prev.move-to-center {
+        /* Mobile Main Card Scale is usually 1.0 or slightly less? Assume 1.1 matches desktop main for now or adjust */
+        transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0) scale(1.1) !important;
+    }
+
+    /* Mobile Side -> Out */
+    .carousel-side.prev.move-out {
+        transform: translate(-50%, -50%) translateX(-150%) translateZ(-300px) rotateY(45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+    .carousel-side.next.move-out {
+        transform: translate(-50%, -50%) translateX(150%) translateZ(-300px) rotateY(-45deg) scale(0.4) !important;
+        opacity: 0;
+    }
+
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Match gallery ease */
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+.carousel-container {
+    perspective: 800px !important;
+    overflow: visible !important;
+}
+
+/* "Mobile First": Force side cards to be VERY small to simulate distance */
+/* Scale reduced from 0.8 -> 0.55 */
+.carousel-side.prev {
+    transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+    z-index: 5 !important;
+}
+
+/* Extra generous hit area for mobile */
+.carousel-side::after {
+    width: 300% !important;
+    height: 200% !important;
+}
+
+.carousel-side.next {
+    transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+    z-index: 5 !important;
+}
+
+.carousel-side {
+    opacity: 0.5 !important;
+    filter: brightness(0.5) blur(1px) !important;
+}
+
+/* --- MOBILE HOVER FIX --- */
+.carousel-side.prev:hover,
+.carousel-side.prev:active {
+    transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+    opacity: 1.0 !important;
+    z-index: 50 !important;
+}
+
+.carousel-side.next:hover,
+.carousel-side.next:active {
+    transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+    opacity: 1.0 !important;
+    z-index: 50 !important;
+}
+
+/* Main Center Card - Matches .pos-center */
+.card {
+    position: relative !important;
+    z-index: 200 !important;
+    /* High priority */
+    /* scale 1.1 from gallery */
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Match gallery ease */
+}
+
+/* Side Cards (Desktop Defaults) - Matches .pos-left/right */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Base State */
+    opacity: 0.8 !important;
+    /* Match gallery */
+    filter: brightness(0.4) blur(3px) !important;
+    /* Match gallery */
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    z-index: 20;
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop) - Matches .pos-left */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+/* Next (Desktop) - Matches .pos-right */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY */
+.carousel-side:hover {
+    opacity: 1.0 !important;
+    filter: brightness(1.0) blur(0px) !important;
+    /* Clear blur on hover */
+    z-index: 25 !important;
+}
+
+.carousel-side.prev:hover {
+    transform: translate(-50%, -50%) translateX(-105%) rotateY(25deg) scale(0.7) !important;
+}
+
+.carousel-side.next:hover {
+    transform: translate(-50%, -50%) translateX(105%) rotateY(-25deg) scale(0.7) !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+    }
+
+    /* "Mobile First": Force side cards to be VERY small to simulate distance */
+    /* Scale reduced from 0.8 -> 0.55 */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        height: 200% !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* Main Center Card */
+.card {
+    position: relative !important;
+    z-index: 20 !important;
+    transform: translateZ(0);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+}
+
+/* Side Cards (Desktop Defaults) */
+.carousel-side {
+    position: absolute !important;
+    top: 50%;
+    transform-origin: center center;
+    width: var(--card-width) !important;
+    height: var(--card-height) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: var(--card-radius) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    opacity: 0.4;
+    filter: brightness(0.5) blur(2px) grayscale(0.5);
+    z-index: 10 !important;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* EXPAND HIT AREA using pseudo-element */
+.carousel-side::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    /* Double the hit area */
+    height: 150%;
+    transform: translate(-50%, -50%);
+    /* Center it */
+    background: transparent;
+    z-index: 20;
+    /* Ensure it catches mouse events */
+    /* border: 1px solid red; /* Debugging - remove later */
+}
+
+/* Hidden if no content */
+.carousel-side:not(.has-content) {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* Previous (Desktop: Push to left) */
+/* Previous (Desktop: Push to left) */
+.carousel-side.prev {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(-120%) translateZ(-150px) rotateY(25deg) scale(0.65) !important;
+}
+
+/* Next (Desktop: Push to right) */
+.carousel-side.next {
+    left: 50%;
+    transform: translate(-50%, -50%) translateX(120%) translateZ(-150px) rotateY(-25deg) scale(0.65) !important;
+}
+
+/* Hover Effects - Opacity/Brightness ONLY (No Movement to prevent twitching) */
+.carousel-side:hover {
+    opacity: 1.0;
+    filter: brightness(1.2) blur(0px) grayscale(0);
+    z-index: 25 !important;
+    /* Do NOT change transform here to avoid hit-testing flicker loops */
+}
+
+.carousel-side.prev:hover {
+    /* Keep exact same transform as non-hover */
+    transform: translate(-50%, -50%) translateX(-120%) translateZ(-150px) rotateY(25deg) scale(0.65) !important;
+}
+
+.carousel-side.next:hover {
+    /* Keep exact same transform as non-hover */
+    transform: translate(-50%, -50%) translateX(120%) translateZ(-150px) rotateY(-25deg) scale(0.65) !important;
+}
+
+
+/* --- MOBILE SPECIFIC OVERRIDES --- */
+@media (max-width: 99999px) {
+    .carousel-container {
+        perspective: 800px !important;
+        overflow: visible !important;
+        /* Allow hit area to extend beyond container */
+        /* Note: Body overflow-x should handle page scroll prevention */
+    }
+
+    /* "Mobile First": Force side cards to be VERY small to simulate distance */
+    /* Scale reduced from 0.8 -> 0.55 */
+    .carousel-side.prev {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.55) !important;
+        /* Increase hit area even more for mobile thumbs */
+        z-index: 5 !important;
+    }
+
+    /* Extra generous hit area for mobile */
+    .carousel-side::after {
+        width: 300% !important;
+        /* Triple width for easy thumb reach */
+        height: 200% !important;
+    }
+
+    .carousel-side.next {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.55) !important;
+        z-index: 5 !important;
+    }
+
+    .carousel-side {
+        opacity: 0.5 !important;
+        filter: brightness(0.5) blur(1px) !important;
+    }
+
+    /* --- MOBILE HOVER FIX --- */
+    /* Maintain small scale on touch, just brighten */
+    .carousel-side.prev:hover,
+    .carousel-side.prev:active {
+        transform: translate(-50%, -50%) translateX(-85%) translateZ(-200px) rotateY(25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+        /* Force click capture over anything */
+    }
+
+    .carousel-side.next:hover,
+    .carousel-side.next:active {
+        transform: translate(-50%, -50%) translateX(85%) translateZ(-200px) rotateY(-25deg) scale(0.6) !important;
+        opacity: 1.0 !important;
+        z-index: 50 !important;
+    }
+}
+
+/* User Request: Mobile Thumbnail Size Reduction (20%) */
+@media (max-width: 99999px) {
+    .gallery-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, 128px) !important;
+        grid-gap: 25px !important;
+        gap: 25px !important;
+    }
+}
+
+.gallery-item {
+    /* 220px * 0.8 = 176px */
+    height: 176px !important;
+}
+
+.thumbnail-scale-wrapper {
+    /* 0.5 * 0.8 = 0.4 */
+    transform: scale(0.4) !important;
+}
+
+
+/* =========================================
+   FINAL DESKTOP LAYOUT & VISIBILITY FIXES
+   ========================================= */
+
+/* 1. Editor Button Visibility Logic */
+/* DEFAULT (Desktop): Visible */
+#editorToggleBtn {
+    display: flex !important;
+}
+
+/* MOBILE Override: Hidden */
+@media (max-width: 99999px) {
+    #editorToggleBtn {
+        display: none !important;
+    }
+}
+
+/* 2. Gallery Layout Width Fix (Desktop) */
+/* Force full width on desktop to prevent "narrow mobile column" look */
+/* DISABLED FOR MOBILE-FIRST WEB VIEW
+@media (min-width: 769px) {
+
+    #myCardsGallery .gallery-container,
+    #myCardsGallery .gallery-content {
+        width: 100% !important;
+        max-width: 1400px !important;
+        margin: 0 auto !important;
+        align-items: center !important;
+    }
+
+    #myCardsGallery .gallery-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 15px !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+
+    .view-section {
+        max-width: none !important;
+        width: 100% !important;
+    }
+}
+*/
+/* ==========================================
+   MOBILE APP CONTAINER (Force Mobile Look)
+   ========================================== */
+body {
+    background-color: #000000;
+    /* Changed to Pure Black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    /* Prevent body scroll */
+    margin: 0;
+    padding-top: 0 !important;
+    /* Force remove top padding */
+    padding-bottom: 0 !important;
+}
+
+#app-container {
+    width: 100%;
+    /* Full Screen Always */
+    max-width: none;
+    /* Remove Mobile Limit completely */
+    height: 100vh;
+    /* Dynamic Viewport Height for Mobile */
+    background-color: #000000;
+    /* Changed to Pure Black */
+    position: relative;
+    overflow: hidden;
+    /* CRITICAL: Prevent container itself from scrolling */
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    /* Mobile Shadow Restored */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Full Screen Enforcement: No Desktop Limits */
+@media (min-width: 769px) {
+    #app-container {
+        max-width: none !important;
+        width: 100vw !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Ensure Editor Panel stays inside */
+/* Ensure Editor Panel stays inside */
+.editor-panel {
+    position: absolute !important;
+    /* Context is #app-container */
+    z-index: 2000;
+    /* Ensure on top */
+    overflow-y: auto !important;
+    /* Enable scrolling for overflow content */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll on iOS */
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    /* Lifted shadow */
+}
+
+/* Mobile: Bottom Sheet */
+@media (max-width: 768px) {
+    .editor-panel {
+        width: 100% !important;
+        bottom: 80px !important;
+        /* Sit above bottom-nav (70px height) */
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: calc(100vh - 150px) !important;
+        max-height: calc(100dvh - 150px) !important;
+        /* Dynamic Viewport Height */
+        padding-bottom: 120px !important;
+        /* Extra padding to clear bottom elements */
+    }
+}
+
+/* Desktop: Right Sidebar */
+@media (min-width: 769px) {
+    .editor-panel {
+        width: 400px !important;
+        /* Fixed reasonable width */
+        height: calc(100% - 160px) !important;
+        /* Full Height minus button space and bottom nav */
+        top: 80px !important;
+        right: 0 !important;
+        /* Stick to Right */
+        bottom: 80px !important;
+        /* Sit above bottom-nav */
+        left: auto !important;
+        border-radius: 0 !important;
+        /* Square corners */
+        max-height: none !important;
+        border-left: 1px solid #333;
+        /* Visual separator */
+        background: #1a1a1a;
+        /* Ensure background */
+    }
+}
+
+/* Bottom Nav: Fixed at Bottom of Viewport */
+.bottom-nav {
+    position: fixed !important;
+    /* Changed from absolute to fixed */
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 56px;
+    border-top: 1px solid #333;
+    background: #121212;
+    /* Solid background to cover content */
+    z-index: 10000 !important;
+    /* Ensure on top of everything */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 20px;
+    height: 100%;
+    width: 50%;
+    /* Equal width */
+    cursor: pointer;
+    border-top: 2px solid transparent;
+    /* Prevent jump */
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-family: 'Teko', sans-serif;
+    /* Assuming font matches */
+    font-size: 20px;
+    /* Match probable size */
+}
+
+/* Vertical divider between nav buttons */
+.nav-btn:first-child {
+    border-right: 1px solid #333;
+}
+
+.nav-btn.active {
+    color: #20d189;
+    /* Green Key Color */
+    border-top: 2px solid #20d189;
+    background: transparent;
+}
+
+/* Buttons: Top Right */
+.my-cards-toggle-btn {
+    display: none !important;
+    /* REDUNDANT: Exists in bottom nav */
+}
+
+/* Template Editor Toggle: Mobile First (Default Hidden) */
+.editor-toggle-btn {
+    display: none !important;
+    /* Hidden by default on mobile */
+    position: fixed !important;
+    top: 20px;
+    right: 20px;
+    width: auto !important;
+    z-index: 2147483647 !important;
+    /* MAX SAFE INTEGER */
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+/* Desktop Mode (769px+) */
+@media (min-width: 769px) {
+
+    /* Use ID selector for higher specificity to override class !important */
+    #editorToggleBtn {
+        display: flex !important;
+    }
+}
+
+/* Ensure padding for content so it doesn't hide behind nav */
+/* Scrollable Content Views */
+#createCardView,
+#myCardsGallery,
+.view-section {
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    /* Content scrolls inside here */
+    padding-bottom: 80px !important;
+    /* Space for Nav */
+    /* Space for Nav */
+    padding-top: 100px !important;
+    /* USER REQUEST: Shift UI down 100px */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll iOS */
+}
+
+/* CRITICAL MOBILE OVERRIDE: Remove the 100px shift on mobile */
+@media (max-width: 999px) {
+
+    #createCardView,
+    #myCardsGallery,
+    .view-section {
+        padding-top: 0px !important;
+        /* Force removed on mobile */
+    }
+}
+
+/* User Request Override: My Cards Header Optimization */
+/* User Request Override: My Cards Header Optimization */
+#myCardsGallery {
+    padding-top: 0 !important;
+    /* Remove empty space above header */
+    background: #111216 !important;
+    /* Restore Exhibition Space Color */
+    box-shadow: none !important;
+    /* Ensure no container shadow */
+    width: 100% !important;
+    /* Force Full Width */
+}
+
+/* My Cards Header: Thin Gray Line (Match Bottom Nav) */
+#myCardsGallery .gallery-main-title {
+    border-bottom: 1px solid #333 !important;
+    /* Exact match to nav border */
+}
+
+
+
+/* Ensure Toasts stay inside */
+#toast-container {
+    position: absolute !important;
+    top: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+}
+
+/* Ensure Modals stay inside */
+.custom-modal-overlay {
+    position: absolute !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Visual Tweak: Reduced Gap for Header */
+/* Visual Tweak: Reduced Gap for Header */
+.carousel-stage {
+    margin-top: 0px !important;
+    /* Removed extra space */
+}
+
+/* --- Global Broken Image Fix --- */
+img {
+    /* Attempt to hide alt text color */
+    color: transparent;
+}
+
+img[src=""],
+img:not([src]) {
+    display: none !important;
+}
+
+/* Hide broken image icon if possible */
+img:not([src]):not([srcset]) {
+    visibility: hidden;
+}
+
+/* --- Updated Card Back Content --- */
+.card__back-title {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    z-index: 20;
+}
+
+.card__back-body {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    text-align: center;
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.4;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    white-space: pre-wrap;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.card__back-info {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    z-index: 20;
+}
